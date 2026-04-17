@@ -17,7 +17,6 @@ export const ClearAllPanel = ({ onClearAll }: ClearAllPanelProps) => {
           className="flex items-center gap-1.5 rounded-xl border border-[#e7c2c2] bg-white/90 px-3 py-1.5 text-xs font-medium text-[#a63d3d] shadow-sm backdrop-blur transition-colors hover:bg-[#fdf0f0]"
         >
           <Trash2 className="h-3.5 w-3.5" />
-          Limpar trilha
         </button>
       )}
 
