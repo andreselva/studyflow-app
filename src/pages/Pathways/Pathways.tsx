@@ -13,7 +13,7 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import { usePathwayHandler } from "../../handlers/usePathwaysHandler";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { nodeTypes } from "../../types/nodeTypes";
 import "@xyflow/react/dist/style.css";
 import { edgeTypes } from "../../types/edgeTypes";
@@ -30,11 +30,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronDown, Plus, Save, Target, Trash2 } from "lucide-react";
+import { ChevronDown, Download, Plus, Save, Target, Trash2, Upload } from "lucide-react";
 import { NODE_TITLE_MAX_LENGTH, normalizeNodeTitle } from "@/lib/node-title";
 import type { StudyNode, StudyNodeData, StudyTask, TaskSide } from "@/types/pathway";
 import { TaskTreeEditor } from "@/components/TaskTreeEditor";
 import { PathwayNodeActionsProvider } from "@/components/pathways/PathwayNodeActionsProvider";
+
+const WELCOME_STORAGE_KEY = "studyflow:welcome-dismissed";
 
 const countTaskStats = (
   tasks: StudyTask[],
@@ -253,6 +255,12 @@ export const Pathways = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [storageError, setStorageError] = useState<string | null>(null);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(WELCOME_STORAGE_KEY) !== "true";
+  });
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   const {
     nodes,
     edges,
@@ -262,6 +270,7 @@ export const Pathways = () => {
     setViewport,
     saveFlow,
     loadFlow,
+    importFlow,
   } =
     usePathwayHandler();
 
@@ -710,8 +719,71 @@ export const Pathways = () => {
     [commitTaskTree, selectedNode, selectedRootNode, updateNodeData],
   );
 
+  const handleExportFlow = useCallback(() => {
+    const payload = JSON.stringify({ nodes, edges, viewport }, null, 2);
+    const blob = new Blob([payload], { type: "application/json" });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+
+    anchor.href = objectUrl;
+    anchor.download = "studyflow-trilha.json";
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+  }, [edges, nodes, viewport]);
+
+  const handleImportFile = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+
+      try {
+        const raw = await file.text();
+        await importFlow(raw);
+        setStorageError(null);
+      } catch (error) {
+        setStorageError(
+          error instanceof Error
+            ? error.message
+            : "Nao foi possivel importar a trilha selecionada.",
+        );
+      }
+    },
+    [importFlow],
+  );
+
   return (
     <div className="relative h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_top,#f7f1e4_0%,#f0eadf_38%,#ece8de_100%)]">
+      {isWelcomeOpen && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#173126]/30 px-4 backdrop-blur-[2px]">
+          <div className="w-full max-w-xl rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-[0_24px_80px_rgba(23,49,38,0.22)]">
+            <span className="inline-flex rounded-full border border-[#dce7df] bg-[#f5fbf7] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#52675c]">
+              Bem-vindo
+            </span>
+            <h2 className="mt-4 text-2xl font-semibold text-[#173126]">
+              O StudyFlow organiza sua trilha de estudos de forma visual.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[#56675f]">
+              Crie nós para representar tópicos, adicione tarefas no canvas,
+              conecte os elementos para montar a estrutura da trilha e acompanhe
+              o progresso de cada etapa. Você também pode salvar no navegador,
+              exportar a trilha em JSON e importar depois.
+            </p>
+            <div className="mt-6 flex justify-end">
+              <Button
+                type="button"
+                onClick={() => {
+                  window.localStorage.setItem(WELCOME_STORAGE_KEY, "true");
+                  setIsWelcomeOpen(false);
+                }}
+                className="bg-[#365949] text-white hover:bg-[#28473a]"
+              >
+                OK
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between px-5 py-5 md:px-8">
         <div className="pointer-events-auto max-w-xl">
           <span className="inline-flex rounded-full border border-white/70 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#52675c] backdrop-blur">
@@ -733,6 +805,16 @@ export const Pathways = () => {
               </div>
               <div className="mt-1 text-sm font-medium text-[#7d2f2f]">
                 Existem {invalidNodeIds.size} elementos sem conexão com outro nó.
+              </div>
+            </div>
+          )}
+          {storageError && (
+            <div className="rounded-3xl border border-[#e6c9a8] bg-[#fff8ef] px-4 py-3 text-right shadow-[0_20px_60px_rgba(151,104,33,0.10)] backdrop-blur">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9a6a1f]">
+                erro de salvamento
+              </div>
+              <div className="mt-1 text-sm font-medium text-[#7f5a1d]">
+                {storageError}
               </div>
             </div>
           )}
@@ -792,12 +874,30 @@ export const Pathways = () => {
           <Panel position="top-center" className="!z-20">
             <div className="rounded-3xl border border-white/70 bg-white/70 p-2 shadow-[0_20px_60px_rgba(23,49,38,0.08)] backdrop-blur">
               <div className="flex items-center gap-2">
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={(event) => {
+                    void handleImportFile(event);
+                  }}
+                />
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
+                  onClick={async () => {
                     if (hasConnectionErrors) return;
-                    void saveFlow();
+                    try {
+                      await saveFlow();
+                      setStorageError(null);
+                    } catch (error) {
+                      setStorageError(
+                        error instanceof Error
+                          ? error.message
+                          : "Nao foi possivel salvar o fluxo no navegador.",
+                      );
+                    }
                   }}
                   disabled={hasConnectionErrors}
                   className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5] disabled:border-[#e7c2c2] disabled:bg-[#fbf1f1] disabled:text-[#aa6a6a]"
@@ -808,11 +908,40 @@ export const Pathways = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={loadFlow}
+                  onClick={async () => {
+                    try {
+                      await loadFlow();
+                      setStorageError(null);
+                    } catch (error) {
+                      setStorageError(
+                        error instanceof Error
+                          ? error.message
+                          : "Nao foi possivel recarregar o fluxo do navegador.",
+                      );
+                    }
+                  }}
                   className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
                 >
                   <Target />
                   Recarregar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportFlow}
+                  className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
+                >
+                  <Download />
+                  Exportar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => importInputRef.current?.click()}
+                  className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
+                >
+                  <Upload />
+                  Importar
                 </Button>
                 <div className="relative">
                   <Button

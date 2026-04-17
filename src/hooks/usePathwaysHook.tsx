@@ -1,10 +1,11 @@
-import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import type { Viewport } from "@xyflow/react";
 import { normalizeNodeTitle } from "@/lib/node-title";
 import type { StudyEdge, StudyNode, StudyNodeData, StudyTask } from "@/types/pathway";
 
 const defaultViewport: Viewport = { x: 0, y: 0, zoom: 1 };
+const FLOW_STORAGE_KEY = "studyflow:flow";
+const FLOW_STORAGE_MAX_BYTES = 2 * 1024 * 1024;
 
 const countTaskStats = (
   tasks: StudyTask[],
@@ -48,6 +49,22 @@ const defaultFlow = (): { nodes: StudyNode[]; edges: StudyEdge[]; viewport: View
   viewport: defaultViewport,
 });
 
+const measureBytes = (value: string) => new TextEncoder().encode(value).length;
+
+const persistFlowPayload = (payload: string) => {
+  const payloadSize = measureBytes(payload);
+
+  if (payloadSize > FLOW_STORAGE_MAX_BYTES) {
+    throw new Error(
+      `Fluxo excede o limite de armazenamento local (${Math.round(
+        FLOW_STORAGE_MAX_BYTES / 1024,
+      )} KB).`,
+    );
+  }
+
+  window.localStorage.setItem(FLOW_STORAGE_KEY, payload);
+};
+
 const normalizeNodes = (rawNodes: unknown[]): StudyNode[] =>
   rawNodes.map((rawNode, index) => {
     const node = rawNode as Partial<StudyNode> & {
@@ -72,6 +89,29 @@ const normalizeNodes = (rawNodes: unknown[]): StudyNode[] =>
     };
   });
 
+const normalizeFlowPayload = (data: unknown): {
+  nodes: StudyNode[];
+  edges: StudyEdge[];
+  viewport: Viewport;
+} => {
+  const typedData = (data ?? {}) as {
+    nodes?: unknown[];
+    edges?: StudyEdge[];
+    viewport?: Partial<Viewport>;
+  };
+
+  return {
+    nodes: Array.isArray(typedData.nodes) ? normalizeNodes(typedData.nodes) : [],
+    edges: Array.isArray(typedData.edges) ? typedData.edges : [],
+    viewport:
+      typeof typedData.viewport?.x === "number" &&
+      typeof typedData.viewport?.y === "number" &&
+      typeof typedData.viewport?.zoom === "number"
+        ? (typedData.viewport as Viewport)
+        : defaultViewport,
+  };
+};
+
 export const usePathwaysHook = () => {
   const [nodes, setNodes] = useState<StudyNode[]>([]);
   const [edges, setEdges] = useState<StudyEdge[]>([]);
@@ -79,15 +119,21 @@ export const usePathwaysHook = () => {
 
   const loadFlow = useCallback(async () => {
     try {
-      const { data } = await axios.get("http://localhost:3001/flow");
-      const nextNodes = Array.isArray(data?.nodes) ? normalizeNodes(data.nodes) : [];
-      const nextEdges = Array.isArray(data?.edges) ? data.edges : [];
-      const nextViewport =
-        typeof data?.viewport?.x === "number" &&
-        typeof data?.viewport?.y === "number" &&
-        typeof data?.viewport?.zoom === "number"
-          ? data.viewport
-          : defaultViewport;
+      const raw = window.localStorage.getItem(FLOW_STORAGE_KEY);
+      if (!raw) {
+        const fallback = defaultFlow();
+        setNodes(fallback.nodes);
+        setEdges(fallback.edges);
+        setViewport(fallback.viewport);
+        return;
+      }
+
+      const data = JSON.parse(raw);
+      const {
+        nodes: nextNodes,
+        edges: nextEdges,
+        viewport: nextViewport,
+      } = normalizeFlowPayload(data);
 
       if (nextNodes.length === 0) {
         const fallback = defaultFlow();
@@ -109,8 +155,21 @@ export const usePathwaysHook = () => {
   }, []);
 
   const saveFlow = useCallback(async () => {
-    await axios.post("http://localhost:3001/flow", { nodes, edges, viewport });
+    const payload = JSON.stringify({ nodes, edges, viewport });
+    persistFlowPayload(payload);
   }, [edges, nodes, viewport]);
+
+  const importFlow = useCallback(async (raw: string) => {
+    const data = JSON.parse(raw);
+    const normalized = normalizeFlowPayload(data);
+    const payload = JSON.stringify(normalized);
+
+    persistFlowPayload(payload);
+
+    setNodes(normalized.nodes);
+    setEdges(normalized.edges);
+    setViewport(normalized.viewport);
+  }, []);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -128,6 +187,7 @@ export const usePathwaysHook = () => {
     setEdges,
     setViewport,
     saveFlow,
-    loadFlow
+    loadFlow,
+    importFlow,
   };
 };
