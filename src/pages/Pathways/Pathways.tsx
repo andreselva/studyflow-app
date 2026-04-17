@@ -789,7 +789,7 @@ export const Pathways = () => {
           <span className="inline-flex rounded-full border border-white/70 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#52675c] backdrop-blur">
             StudyFlow
           </span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#173126] md:text-4xl">
+          <h1 className="mt-2 text-base font-medium tracking-tight text-[#173126] md:text-lg">
             Trilha visual de estudos com progresso por assunto.
           </h1>
           <p className="mt-2 max-w-lg text-sm leading-6 text-[#56675f] md:text-base">
