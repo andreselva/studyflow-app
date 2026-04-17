@@ -30,7 +30,6 @@ function TaskItem({
   onRemoveTask: (taskId: string) => void;
 }) {
   const branchSide = task.side ?? "right";
-  const sideLabel = branchSide === "left" ? "Esq." : "Dir.";
 
   return (
     <div
