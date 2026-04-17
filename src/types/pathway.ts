@@ -16,6 +16,7 @@ export type StudyNodeData = {
   rootNodeId?: string;
   parentNodeId?: string;
   side?: TaskSide;
+  invalid?: boolean;
   title: string;
   description: string;
   tasks: StudyTask[];

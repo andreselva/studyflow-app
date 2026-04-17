@@ -12,7 +12,7 @@ export default function PathwayNode({
     "!h-3 !w-3 !border-2 !border-[#f6efe4] opacity-0 transition-opacity duration-150 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto";
 
   return (
-    <div className="group relative flex min-h-40 min-w-40 items-center justify-center">
+    <div className="group relative inline-flex items-center justify-center overflow-visible">
       <Handle
         type="target"
         position={Position.Top}
@@ -40,7 +40,9 @@ export default function PathwayNode({
 
       <div
         className={`flex min-h-34 min-w-34 max-w-56 flex-col items-center justify-center rounded-[999px] border bg-[#fffaf1] px-6 py-5 text-center shadow-[0_18px_50px_rgba(24,45,37,0.12)] transition-all ${
-          selected
+          data.invalid
+            ? "border-[#c94f4f] ring-4 ring-[#e7b3b3]/55"
+            : selected
             ? "border-[#365949] ring-4 ring-[#a6c3b1]/50"
             : "border-[#7d8f85]/45"
         }`}
@@ -51,7 +53,13 @@ export default function PathwayNode({
         <strong className="break-words text-sm font-semibold text-[#173126]">
           {title}
         </strong>
-        <span className="mt-3 rounded-full border border-[#d7e4db] bg-[#f5fbf7] px-3 py-1 text-[11px] font-medium text-[#365949]">
+        <span
+          className={`mt-3 rounded-full border px-3 py-1 text-[11px] font-medium ${
+            data.invalid
+              ? "border-[#ebc3c3] bg-[#fff1f1] text-[#a63d3d]"
+              : "border-[#d7e4db] bg-[#f5fbf7] text-[#365949]"
+          }`}
+        >
           {progress}% concluido
         </span>
       </div>

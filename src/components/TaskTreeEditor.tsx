@@ -114,9 +114,6 @@ export function TaskTreeEditor({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-[#173126]">Tarefas</h3>
-          <p className="text-sm text-[#7b8b82]">
-            Organize o assunto em passos e subtarefas recursivas.
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button

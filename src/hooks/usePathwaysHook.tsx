@@ -6,13 +6,6 @@ import type { StudyEdge, StudyNode, StudyNodeData, StudyTask } from "@/types/pat
 
 const defaultViewport: Viewport = { x: 0, y: 0, zoom: 1 };
 
-const createTask = (title: string, children: StudyTask[] = []): StudyTask => ({
-  id: crypto.randomUUID(),
-  title: normalizeNodeTitle(title),
-  done: false,
-  children,
-});
-
 const countTaskStats = (
   tasks: StudyTask[],
 ): { completed: number; total: number } =>
@@ -50,36 +43,7 @@ const enrichNodeData = (data?: Partial<StudyNodeData>): StudyNodeData => {
 };
 
 const defaultFlow = (): { nodes: StudyNode[]; edges: StudyEdge[]; viewport: Viewport } => ({
-  nodes: [
-    {
-      id: crypto.randomUUID(),
-      type: "circle",
-      position: { x: -180, y: -80 },
-      data: enrichNodeData({
-        kind: "topic",
-        title: "Fundamentos",
-        description: "Base da trilha com conceitos que sustentam os proximos estudos.",
-        tasks: [
-          createTask("Mapear o conteudo principal"),
-          createTask("Concluir a primeira revisao", [createTask("Registrar duvidas")]),
-        ],
-      }),
-    },
-    {
-      id: crypto.randomUUID(),
-      type: "circle",
-      position: { x: 120, y: 180 },
-      data: enrichNodeData({
-        kind: "topic",
-        title: "Pratica guiada",
-        description: "Aplicacoes iniciais para consolidar a teoria.",
-        tasks: [
-          createTask("Executar exercicios basicos"),
-          createTask("Montar mini projeto"),
-        ],
-      }),
-    },
-  ],
+  nodes: [],
   edges: [],
   viewport: defaultViewport,
 });

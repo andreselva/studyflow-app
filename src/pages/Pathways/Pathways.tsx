@@ -25,16 +25,16 @@ import {
   SheetClose,
   SheetCloseIcon,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetOverlay,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Save, Sidebar, Target } from "lucide-react";
+import { ChevronDown, Plus, Save, Target, Trash2 } from "lucide-react";
 import { NODE_TITLE_MAX_LENGTH, normalizeNodeTitle } from "@/lib/node-title";
 import type { StudyNode, StudyNodeData, StudyTask, TaskSide } from "@/types/pathway";
 import { TaskTreeEditor } from "@/components/TaskTreeEditor";
+import { PathwayNodeActionsProvider } from "@/components/pathways/PathwayNodeActionsProvider";
 
 const countTaskStats = (
   tasks: StudyTask[],
@@ -67,8 +67,10 @@ const enrichNodeData = (data: StudyNodeData): StudyNodeData => {
   };
 };
 
-const sourceHandleIsTaskSide = (handle?: string | null): handle is "task-left" | "task-right" =>
-  handle === "task-left" || handle === "task-right";
+const sourceHandleIsTaskSide = (
+  handle?: string | null,
+): handle is "task-left" | "task-right" | "task-bottom" =>
+  handle === "task-left" || handle === "task-right" || handle === "task-bottom";
 
 const createConnectedEdge = (
   source: string,
@@ -168,20 +170,6 @@ const collectTaskNodeIds = (task: StudyTask): string[] => [
   ...task.children.flatMap(collectTaskNodeIds),
 ];
 
-const flattenTaskTree = (tasks: StudyTask[]): Map<string, StudyTask> => {
-  const taskMap = new Map<string, StudyTask>();
-
-  const visit = (entries: StudyTask[]) => {
-    entries.forEach((task) => {
-      if (task.nodeId) taskMap.set(task.nodeId, task);
-      visit(task.children);
-    });
-  };
-
-  visit(tasks);
-  return taskMap;
-};
-
 const findTaskById = (tasks: StudyTask[], taskId: string): StudyTask | null => {
   for (const task of tasks) {
     if (task.id === taskId) return task;
@@ -235,11 +223,37 @@ const buildTaskNode = (
   };
 };
 
+const buildStandaloneTopicNode = (position: { x: number; y: number }): StudyNode => ({
+  id: crypto.randomUUID(),
+  type: "circle",
+  position,
+  data: enrichNodeData({
+    kind: "topic",
+    title: normalizeNodeTitle("Novo nó"),
+    description: "",
+    tasks: [],
+  }),
+});
+
+const buildStandaloneTaskNode = (position: { x: number; y: number }): StudyNode => ({
+  id: crypto.randomUUID(),
+  type: "task",
+  position,
+  data: enrichNodeData({
+    kind: "task",
+    side: "right",
+    title: normalizeNodeTitle("Nova tarefa"),
+    description: "",
+    done: false,
+    tasks: [],
+  }),
+});
+
 export const Pathways = () => {
-  const [open, setOpen] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [isCreateMenuOpen, setIsCreateMenuOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const {
-    addNode,
     nodes,
     edges,
     viewport,
@@ -251,9 +265,36 @@ export const Pathways = () => {
   } =
     usePathwayHandler();
 
+  const invalidNodeIds = useMemo(() => {
+    const connectedNodeIds = new Set<string>();
+
+    edges.forEach((edge) => {
+      connectedNodeIds.add(edge.source);
+      connectedNodeIds.add(edge.target);
+    });
+
+    return new Set(
+      nodes.filter((node) => !connectedNodeIds.has(node.id)).map((node) => node.id),
+    );
+  }, [edges, nodes]);
+
+  const nodesForCanvas = useMemo(
+    () =>
+      nodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          invalid: invalidNodeIds.has(node.id),
+        },
+      })),
+    [invalidNodeIds, nodes],
+  );
+
+  const hasConnectionErrors = invalidNodeIds.size > 0;
+
   const selectedNode = useMemo(
-    () => nodes.find((node) => node.id === selectedNodeId) ?? null,
-    [nodes, selectedNodeId],
+    () => nodesForCanvas.find((node) => node.id === selectedNodeId) ?? null,
+    [nodesForCanvas, selectedNodeId],
   );
 
   const selectedRootNode = useMemo(() => {
@@ -283,7 +324,18 @@ export const Pathways = () => {
 
   const syncNodeSubtree = useCallback(
     (rootNodeId: string, nextTasks: StudyTask[], nodesSnapshot: StudyNode[]) => {
-      const taskMap = flattenTaskTree(nextTasks);
+      const taskMap = new Map<string, { task: StudyTask; parentNodeId: string }>();
+
+      const visit = (entries: StudyTask[], parentNodeId: string) => {
+        entries.forEach((task) => {
+          if (task.nodeId) {
+            taskMap.set(task.nodeId, { task, parentNodeId });
+            visit(task.children, task.nodeId);
+          }
+        });
+      };
+
+      visit(nextTasks, rootNodeId);
 
       return nodesSnapshot.map((node) => {
         if (node.id === rootNodeId) {
@@ -296,20 +348,20 @@ export const Pathways = () => {
           };
         }
 
-        const linkedTask = taskMap.get(node.id);
-        if (!linkedTask) return node;
+        const linked = taskMap.get(node.id);
+        if (!linked) return node;
 
         return {
           ...node,
           data: enrichNodeData({
             ...node.data,
             kind: "task",
-            rootNodeId: node.data.rootNodeId,
-            parentNodeId: node.data.parentNodeId,
-            side: linkedTask.side ?? node.data.side,
-            title: linkedTask.title,
-            done: linkedTask.done,
-            tasks: linkedTask.children,
+            rootNodeId,
+            parentNodeId: linked.parentNodeId,
+            side: linked.task.side ?? node.data.side,
+            title: linked.task.title,
+            done: linked.task.done,
+            tasks: linked.task.children,
           }),
         };
       });
@@ -400,6 +452,53 @@ export const Pathways = () => {
 
       if (!isMainFlowConnection && !isTaskConnection) return;
 
+      if (isTaskConnection) {
+        const sourceRootNode =
+          sourceNode.data.kind === "task"
+            ? nodes.find((node) => node.id === sourceNode.data.rootNodeId) ?? null
+            : sourceNode;
+        if (!sourceRootNode) return;
+
+        const rootTasks = sourceRootNode.data.tasks;
+        const parentTask =
+          sourceNode.data.kind === "task"
+            ? findTaskByNodeId(rootTasks, sourceNode.id)
+            : null;
+
+        if (sourceNode.data.kind === "task" && !parentTask) return;
+        if (targetNode.data.rootNodeId) return;
+
+        const side =
+          params.sourceHandle === "task-left"
+            ? "left"
+            : params.sourceHandle === "task-right"
+              ? "right"
+              : sourceNode.data.side ?? "right";
+        const targetTask: StudyTask = {
+          id: crypto.randomUUID(),
+          nodeId: targetNode.id,
+          side,
+          title: targetNode.data.title,
+          done: Boolean(targetNode.data.done),
+          children: targetNode.data.tasks,
+        };
+        const nextTasks = parentTask
+          ? addChildTask(rootTasks, parentTask.id, targetTask)
+          : [...rootTasks, targetTask];
+
+        commitTaskTree(sourceRootNode.id, nextTasks, {
+          extraEdges: [
+            createConnectedEdge(
+              params.source,
+              params.target,
+              params.sourceHandle ?? undefined,
+              params.targetHandle ?? undefined,
+            ),
+          ],
+        });
+        return;
+      }
+
       setEdges((edgesSnapshot) => [
         ...edgesSnapshot,
         createConnectedEdge(
@@ -410,40 +509,18 @@ export const Pathways = () => {
         ),
       ]);
     },
-    [nodes, setEdges],
+    [commitTaskTree, nodes, setEdges],
   );
 
   const onNodeClick: NodeMouseHandler<StudyNode> = useCallback((_, node) => {
+    setIsCreateMenuOpen(false);
+    setIsDeleteConfirmOpen(false);
     setSelectedNodeId(node.id);
   }, []);
 
-  const onNodeDoubleClick: NodeMouseHandler<StudyNode> = useCallback(
-    (_, node) => {
-      const title = normalizeNodeTitle(
-        prompt("Editar nome do assunto:", node.data.title) ?? "",
-      );
-      if (!title) return;
-
-      updateNodeData(node.id, (data) => ({ ...data, title }));
-      if (node.data.kind === "task") {
-        const rootNode =
-          nodes.find((candidate) => candidate.id === node.data.rootNodeId) ?? null;
-        if (rootNode) {
-          const nextTasks = updateTaskTreeByNodeId(rootNode.data.tasks, node.id, (task) => ({
-            ...task,
-            title,
-          }));
-          commitTaskTree(rootNode.id, nextTasks);
-        }
-      }
-      setSelectedNodeId(node.id);
-    },
-    [commitTaskTree, nodes, updateNodeData],
-  );
-
   const completionLabel = selectedNode
     ? `${selectedNode.data.completedTasks ?? 0}/${selectedNode.data.totalTasks ?? 0} tarefas`
-    : "Selecione um no";
+    : "Selecione um nó";
 
   const handleAddTaskNode = useCallback(
     (side: TaskSide, parentTaskId?: string) => {
@@ -493,6 +570,31 @@ export const Pathways = () => {
     [commitTaskTree, nodes, selectedNode, selectedRootNode],
   );
 
+  const getViewportCenterPosition = useCallback(() => {
+    const paneWidth = window.innerWidth;
+    const paneHeight = window.innerHeight;
+
+    return {
+      x: -viewport.x / viewport.zoom + paneWidth / (2 * viewport.zoom),
+      y: -viewport.y / viewport.zoom + paneHeight / (2 * viewport.zoom),
+    };
+  }, [viewport]);
+
+  const handleCreateStandaloneTopicNode = useCallback(() => {
+    const nextNode = buildStandaloneTopicNode(getViewportCenterPosition());
+
+    setNodes((nodesSnapshot) => [...nodesSnapshot, nextNode]);
+    setSelectedNodeId(nextNode.id);
+  }, [getViewportCenterPosition, setNodes]);
+
+  const handleCreateStandaloneTaskNode = useCallback(() => {
+    const nextNode = buildStandaloneTaskNode(getViewportCenterPosition());
+
+    setNodes((nodesSnapshot) => [...nodesSnapshot, nextNode]);
+    setSelectedNodeId(nextNode.id);
+    setIsCreateMenuOpen(false);
+  }, [getViewportCenterPosition, setNodes]);
+
   const handleTaskTitleChange = useCallback(
     (taskId: string, title: string) => {
       if (!selectedRootNode) return;
@@ -541,6 +643,55 @@ export const Pathways = () => {
     [commitTaskTree, selectedNodeId, selectedRootNode],
   );
 
+  const handleDeleteSelectedNode = useCallback(() => {
+    if (!selectedNode) return;
+
+    if (selectedNode.data.kind === "task" && selectedRootNode) {
+      const taskEntry = findTaskByNodeId(selectedRootNode.data.tasks, selectedNode.id);
+      if (taskEntry) {
+        handleTaskRemove(taskEntry.id);
+        return;
+      }
+    }
+
+    const removedNodeIds = [
+      selectedNode.id,
+      ...selectedNode.data.tasks.flatMap(collectTaskNodeIds),
+    ];
+
+    setNodes((nodesSnapshot) =>
+      nodesSnapshot.filter((node) => !removedNodeIds.includes(node.id)),
+    );
+    setEdges((edgesSnapshot) =>
+      edgesSnapshot.filter(
+        (edge) =>
+          !removedNodeIds.includes(edge.source) &&
+          !removedNodeIds.includes(edge.target),
+      ),
+    );
+    setSelectedNodeId(null);
+  }, [handleTaskRemove, selectedNode, selectedRootNode, setEdges, setNodes]);
+
+  const handleToggleTaskNodeDone = useCallback(
+    (nodeId: string, done: boolean) => {
+      const taskNode = nodes.find((node) => node.id === nodeId);
+      if (!taskNode || taskNode.data.kind !== "task") return;
+
+      updateNodeData(nodeId, (data) => ({ ...data, done }));
+
+      const rootNode =
+        nodes.find((node) => node.id === taskNode.data.rootNodeId) ?? null;
+      if (!rootNode) return;
+
+      const nextTasks = updateTaskTreeByNodeId(rootNode.data.tasks, nodeId, (task) => ({
+        ...task,
+        done,
+      }));
+      commitTaskTree(rootNode.id, nextTasks);
+    },
+    [commitTaskTree, nodes, updateNodeData],
+  );
+
   const handleSelectedNodeTitleChange = useCallback(
     (title: string) => {
       if (!selectedNode) return;
@@ -570,110 +721,148 @@ export const Pathways = () => {
             Trilha visual de estudos com progresso por assunto.
           </h1>
           <p className="mt-2 max-w-lg text-sm leading-6 text-[#56675f] md:text-base">
-            Mapeie a jornada inteira, conecte topicos, acompanhe tarefas e
+            Mapeie a jornada inteira, conecte tópicos, acompanhe tarefas e
             expanda a trilha sem perder contexto.
           </p>
         </div>
-        <div className="pointer-events-auto hidden rounded-3xl border border-white/70 bg-white/65 px-4 py-3 text-right shadow-[0_20px_60px_rgba(23,49,38,0.08)] backdrop-blur md:block">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8b82]">
-            foco atual
+        <div className="pointer-events-auto hidden max-w-sm space-y-3 md:block">
+          {hasConnectionErrors && (
+            <div className="rounded-3xl border border-[#e4b6b6] bg-[#fff4f4] px-4 py-3 text-right shadow-[0_20px_60px_rgba(163,63,63,0.10)] backdrop-blur">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#a63d3d]">
+                erro de conexão
+              </div>
+              <div className="mt-1 text-sm font-medium text-[#7d2f2f]">
+                Existem {invalidNodeIds.size} elementos sem conexão com outro nó.
+              </div>
+            </div>
+          )}
+          <div className="rounded-3xl border border-white/70 bg-white/65 px-4 py-3 text-right shadow-[0_20px_60px_rgba(23,49,38,0.08)] backdrop-blur">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8b82]">
+              foco atual
+            </div>
+            <div className="mt-1 text-lg font-semibold text-[#173126]">
+              {selectedNode ? selectedNode.data.title : "Mapa completo"}
+            </div>
+            <div className="mt-1 text-sm text-[#62736a]">{completionLabel}</div>
           </div>
-          <div className="mt-1 text-lg font-semibold text-[#173126]">
-            {selectedNode ? selectedNode.data.title : "Mapa completo"}
-          </div>
-          <div className="mt-1 text-sm text-[#62736a]">{completionLabel}</div>
         </div>
       </div>
 
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        viewport={viewport}
-        onViewportChange={setViewport}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeClick={onNodeClick}
-        onNodeDoubleClick={onNodeDoubleClick}
-        onPaneClick={() => setSelectedNodeId(null)}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        defaultEdgeOptions={{
-          type: "custom",
-          markerEnd: {
-            type: "arrowclosed",
-            width: 18,
-            height: 18,
-            color: "#365949",
-          },
-        }}
-        minZoom={0.45}
-      >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={20}
-          size={1.2}
-          color="#9fb5a8"
-        />
-        <Controls />
-        <MiniMap
-          pannable
-          zoomable
-          nodeColor={() => "#365949"}
-          className="!bg-white/90 !backdrop-blur"
-        />
-        <Panel position="top-center" className="!z-20">
-          <div className="rounded-3xl border border-white/70 bg-white/70 p-2 shadow-[0_20px_60px_rgba(23,49,38,0.08)] backdrop-blur">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={saveFlow}
-                className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
-              >
-                <Save />
-                Salvar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadFlow}
-                className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
-              >
-                <Target />
-                Recarregar
-              </Button>
-              <div className="h-6 w-px bg-[#d8e2db]" />
-              <Button
-                size="sm"
-                onClick={() => setOpen((prev) => !prev)}
-                className="bg-[#365949] text-white hover:bg-[#28473a]"
-              >
-                <Sidebar />
-                {open ? "Fechar" : "Acoes"}
-              </Button>
-            </div>
-            {open && (
-              <div className="mt-2 flex items-center gap-2 rounded-2xl border border-[#dce6df] bg-[#fbfdfb] p-2">
+      <PathwayNodeActionsProvider value={{ toggleTaskNodeDone: handleToggleTaskNodeDone }}>
+        <ReactFlow
+          nodes={nodesForCanvas}
+          edges={edges}
+          viewport={viewport}
+          onViewportChange={setViewport}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          onPaneClick={() => {
+            setIsCreateMenuOpen(false);
+            setIsDeleteConfirmOpen(false);
+            setSelectedNodeId(null);
+          }}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          defaultEdgeOptions={{
+            type: "custom",
+            markerEnd: {
+              type: "arrowclosed",
+              width: 18,
+              height: 18,
+              color: "#365949",
+            },
+          }}
+          minZoom={0.45}
+        >
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={20}
+            size={1.2}
+            color="#9fb5a8"
+          />
+          <Controls />
+          <MiniMap
+            pannable
+            zoomable
+            nodeColor={() => "#365949"}
+            className="!bg-white/90 !backdrop-blur"
+          />
+          <Panel position="top-center" className="!z-20">
+            <div className="rounded-3xl border border-white/70 bg-white/70 p-2 shadow-[0_20px_60px_rgba(23,49,38,0.08)] backdrop-blur">
+              <div className="flex items-center gap-2">
                 <Button
-                  type="button"
+                  variant="outline"
                   size="sm"
-                  onClick={addNode}
-                  className="bg-[#ebe4d8] text-[#173126] hover:bg-[#e3dac9]"
+                  onClick={() => {
+                    if (hasConnectionErrors) return;
+                    void saveFlow();
+                  }}
+                  disabled={hasConnectionErrors}
+                  className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5] disabled:border-[#e7c2c2] disabled:bg-[#fbf1f1] disabled:text-[#aa6a6a]"
                 >
-                  <Plus />
-                  Criar no
+                  <Save />
+                  Salvar
                 </Button>
-                <p className="text-xs text-[#6f8077]">
-                  Fluxo principal em cima/baixo. Tarefas apenas pelos conectores laterais.
-                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadFlow}
+                  className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
+                >
+                  <Target />
+                  Recarregar
+                </Button>
+                <div className="relative">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setIsCreateMenuOpen((open) => !open)}
+                    className="bg-[#365949] text-white hover:bg-[#28473a]"
+                    aria-label="Abrir menu de criacao"
+                  >
+                    <Plus />
+                    Criar
+                    <ChevronDown />
+                  </Button>
+                  {isCreateMenuOpen && (
+                    <div className="absolute right-0 top-[calc(100%+0.5rem)] min-w-40 rounded-2xl border border-[#d4dfd7] bg-white p-1 shadow-[0_20px_50px_rgba(23,49,38,0.12)]">
+                      <button
+                        type="button"
+                        className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-medium text-[#173126] transition-colors hover:bg-[#f4f8f5]"
+                        onClick={() => {
+                          handleCreateStandaloneTopicNode();
+                          setIsCreateMenuOpen(false);
+                        }}
+                      >
+                        Nó
+                      </button>
+                      <button
+                        type="button"
+                        className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-medium text-[#173126] transition-colors hover:bg-[#f4f8f5] disabled:cursor-not-allowed disabled:text-[#9da8a2] disabled:hover:bg-transparent"
+                        onClick={handleCreateStandaloneTaskNode}
+                      >
+                        Tarefa
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        </Panel>
-      </ReactFlow>
+            </div>
+          </Panel>
+        </ReactFlow>
+      </PathwayNodeActionsProvider>
 
-      <Sheet open={Boolean(selectedNode)} onOpenChange={(open) => !open && setSelectedNodeId(null)}>
+      <Sheet
+        open={Boolean(selectedNode)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsDeleteConfirmOpen(false);
+            setSelectedNodeId(null);
+          }
+        }}
+      >
         <SheetOverlay />
         {selectedNode && (
           <SheetContent>
@@ -683,10 +872,6 @@ export const Pathways = () => {
                   assunto selecionado
                 </span>
                 <SheetTitle>{selectedNode.data.title}</SheetTitle>
-                <SheetDescription>
-                  Clique duplo no no para renomear direto no canvas ou edite os
-                  detalhes aqui.
-                </SheetDescription>
               </div>
               <SheetClose aria-label="Fechar painel lateral">
                 <SheetCloseIcon />
@@ -747,6 +932,47 @@ export const Pathways = () => {
                       style={{ width: `${selectedNode.data.progress ?? 0}%` }}
                     />
                   </div>
+                </div>
+                <div className="flex justify-end">
+                  {!isDeleteConfirmOpen ? (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setIsDeleteConfirmOpen(true)}
+                      className="bg-[#fdf0f0] text-[#a63d3d] hover:bg-[#f9dddd]"
+                    >
+                      <Trash2 />
+                      Excluir nó
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-2 rounded-2xl border border-[#e7c2c2] bg-[#fff4f4] px-3 py-2">
+                      <span className="text-xs font-medium text-[#8f3c3c]">
+                        Confirmar exclusão?
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsDeleteConfirmOpen(false)}
+                        className="border-[#dfd7d7] bg-white text-[#6a5a5a] hover:bg-[#f7f3f3]"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setIsDeleteConfirmOpen(false);
+                          handleDeleteSelectedNode();
+                        }}
+                        className="bg-[#c94f4f] text-white hover:bg-[#b64141]"
+                      >
+                        Confirmar
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
