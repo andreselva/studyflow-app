@@ -1,7 +1,7 @@
-import CircleNode from "../components/CircleNode";
+import PathwayNode from "../components/PathwayNode";
 import TaskNode from "../components/TaskNode";
 
 export const nodeTypes = {
-    task: TaskNode,
-    circle: CircleNode
-}
+  circle: PathwayNode,
+  task: TaskNode,
+};

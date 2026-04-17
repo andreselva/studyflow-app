@@ -1,53 +1,67 @@
 import { useCallback } from "react";
 import { usePathwaysHook } from "../hooks/usePathwaysHook";
+import { normalizeNodeTitle } from "@/lib/node-title";
+import type { StudyNodeData, StudyTask } from "@/types/pathway";
+
+const countTaskStats = (
+  tasks: StudyTask[],
+): { completed: number; total: number } =>
+  tasks.reduce(
+    (stats, task) => {
+      const childStats = countTaskStats(task.children);
+
+      return {
+        completed: stats.completed + (task.done ? 1 : 0) + childStats.completed,
+        total: stats.total + 1 + childStats.total,
+      };
+    },
+    { completed: 0, total: 0 },
+  );
+
+const buildNodeData = (
+  title: string,
+  description = "",
+  tasks: StudyTask[] = [],
+): StudyNodeData => {
+  const { completed, total } = countTaskStats(tasks);
+
+  return {
+    title,
+    description,
+    tasks,
+    progress: total > 0 ? (completed / total) * 100 : 0,
+    completedTasks: completed,
+    totalTasks: total,
+  };
+};
 
 export const usePathwayHandler = () => {
-  const { nodes, edges, setNodes, setEdges, saveFlow, loadFlow } = usePathwaysHook();
+  const { nodes, edges, viewport, setNodes, setEdges, setViewport, saveFlow, loadFlow } =
+    usePathwaysHook();
 
-  const addNode = useCallback(() => {                                                                                                                                                                                                         
-    const label = prompt('Nome do nó:')                                                                                                                                                                                                       
-    if (!label) return                                                                                                                                                                                                                        
-    const newNode = {
-      id: crypto.randomUUID(),                                                                                                                                                                                                                
-      position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: { label },                                                                                                                                                                                                                        
-    }
-    setNodes((prev) => [...prev, newNode])                                                                                                                                                                                                    
-  }, []);
+  const addNode = useCallback(() => {
+    const title = normalizeNodeTitle(prompt("Nome do assunto:") ?? "");
+    if (!title) return;
 
-  const addTaskNode = useCallback(() => {                                                                                                                                                                                                     
-    const label = prompt('Nome da tarefa:')                                                                                                                                                                                                   
-    if (!label) return                                                                                                                                                                                                                        
     const newNode = {
       id: crypto.randomUUID(),
-      type: 'task',
+      type: "circle",
       position: { x: Math.random() * 400, y: Math.random() * 400 },
-      data: { label },                                                                                                                                                                                                                        
-    }
-    setNodes((prev) => [...prev, newNode])                                                                                                                                                                                                    
-  }, []);
+      data: buildNodeData(title),
+    };
 
-  const addCircleNode = useCallback(() => {
-    const label = prompt('Insira um nome:');
-    if (!label) return
-    const newNode = {
-      id: crypto.randomUUID(),
-      type: 'circle',
-      position: { x: Math.random() * 240, y: Math.random() * 350 },
-      data: { label }
-    }
     setNodes((prev) => [...prev, newNode]);
-  }, []);
+  }, [setNodes]);
 
   return {
     addNode,
-    addTaskNode,
-    addCircleNode,
     nodes,
     edges,
+    viewport,
     setNodes,
     setEdges,
+    setViewport,
     saveFlow,
     loadFlow
-  }
-}
+  };
+};
