@@ -73,7 +73,7 @@ function TaskItem({
           className="border-[#d9e5dc] bg-white text-[#365949] hover:bg-[#f5fbf7]"
         >
           <Plus />
-          {`Sub ${sideLabel}`}
+          Subtarefa
         </Button>
       </div>
 
