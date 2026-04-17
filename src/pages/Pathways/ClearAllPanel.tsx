@@ -14,9 +14,9 @@ export const ClearAllPanel = ({ onClearAll }: ClearAllPanelProps) => {
         <button
           type="button"
           onClick={() => setStep(1)}
-          className="flex items-center gap-1.5 rounded-xl border border-[#e7c2c2] bg-white/90 px-3 py-1.5 text-xs font-medium text-[#a63d3d] shadow-sm backdrop-blur transition-colors hover:bg-[#fdf0f0]"
+          className="flex items-center gap-1.5 rounded-xl border border-[#c94f4f] bg-[#c94f4f] px-3 py-1.5 text-xs font-medium text-white shadow-sm backdrop-blur transition-colors hover:bg-[#b64141] hover:border-[#b64141]"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3.5 w-3.5 text-white" />
         </button>
       )}
 
