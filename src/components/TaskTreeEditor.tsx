@@ -37,11 +37,10 @@ function TaskItem({
       className="space-y-3 rounded-2xl border border-[#d9e5dc] bg-white/80 p-4"
       style={{ marginLeft: depth > 0 ? 16 : 0 }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         <Checkbox
           checked={task.done}
           onCheckedChange={(checked) => onToggleDone(task.id, checked)}
-          className="mt-1"
         />
         <Input
           value={task.title}
@@ -94,7 +93,7 @@ function TaskItem({
         </div>
       ) : (
         <p className="text-sm text-[#8b9a91]">
-          Nenhuma subtarefa ainda. Adicione conforme a trilha evolui.
+          Nenhuma subtarefa. Adicione conforme a trilha evolui.
         </p>
       )}
     </div>
@@ -150,7 +149,7 @@ export function TaskTreeEditor({
         ))
       ) : (
         <div className="rounded-2xl border border-dashed border-[#c8d9cd] bg-[#f8fbf8] p-5 text-sm text-[#7b8b82]">
-          Esse no ainda nao possui tarefas. Crie a primeira para acompanhar o progresso.
+          Nenhuma tarefa associada. Crie a primeira para acompanhar o progresso.
         </div>
       )}
     </div>

@@ -37,6 +37,9 @@ const enrichNodeData = (data?: Partial<StudyNodeData>): StudyNodeData => {
 
   return {
     kind: data?.kind ?? "topic",
+    rootNodeId: data?.rootNodeId,
+    parentNodeId: data?.parentNodeId,
+    side: data?.side,
     title: normalizeNodeTitle(data?.title ?? data?.description ?? "Novo assunto"),
     description: data?.description ?? "",
     tasks,
@@ -306,9 +309,11 @@ export const usePathwaysHook = () => {
   const [viewport, setViewport] = useState<Viewport>(defaultViewport);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [autoSaveError, setAutoSaveError] = useState<string | null>(null);
+  const [isAutoSaved, setIsAutoSaved] = useState(false);
   const manualSavedPayloadRef = useRef(JSON.stringify(defaultFlow()));
   const lastAutoSavedPayloadRef = useRef(JSON.stringify(defaultFlow()));
   const latestPayloadRef = useRef(JSON.stringify(defaultFlow()));
+  const autoSavedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const buildPayload = useCallback(
     () => JSON.stringify({ nodes, edges, viewport }),
@@ -445,6 +450,9 @@ export const usePathwaysHook = () => {
         );
         lastAutoSavedPayloadRef.current = payload;
         setAutoSaveError(null);
+        setIsAutoSaved(true);
+        if (autoSavedTimerRef.current) clearTimeout(autoSavedTimerRef.current);
+        autoSavedTimerRef.current = setTimeout(() => setIsAutoSaved(false), 3000);
       } catch (error) {
         setAutoSaveError(
           error instanceof Error
@@ -477,5 +485,6 @@ export const usePathwaysHook = () => {
     importFlow,
     hasUnsavedChanges,
     autoSaveError,
+    isAutoSaved,
   };
 };

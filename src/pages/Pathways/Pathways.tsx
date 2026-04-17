@@ -56,6 +56,7 @@ export const Pathways = () => {
     importFlow,
     hasUnsavedChanges,
     autoSaveError,
+    isAutoSaved,
   } = usePathwayHandler();
 
   useEffect(() => {
@@ -585,6 +586,7 @@ export const Pathways = () => {
           invalidNodeCount={invalidNodeIds.size}
           storageError={storageError}
           autoSaveError={autoSaveError}
+          isAutoSaved={isAutoSaved}
         />
       </div>
 

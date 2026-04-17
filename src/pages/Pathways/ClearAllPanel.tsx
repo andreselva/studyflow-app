@@ -24,7 +24,7 @@ export const ClearAllPanel = ({ onClearAll }: ClearAllPanelProps) => {
       {step === 1 && (
         <div className="flex items-center gap-2 rounded-2xl border border-[#e7c2c2] bg-white/95 px-3 py-2 shadow-md backdrop-blur">
           <span className="text-xs font-medium text-[#8f3c3c]">
-            Tem certeza? Isso removerá todos os nós.
+            Tem certeza? Toda sua trilha será excluída.
           </span>
           <button
             type="button"

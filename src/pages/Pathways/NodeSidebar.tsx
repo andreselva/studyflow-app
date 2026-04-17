@@ -83,7 +83,7 @@ export const NodeSidebar = ({
               </label>
 
               <label className="grid gap-2">
-                <Label htmlFor="node-description">Descricao</Label>
+                <Label htmlFor="node-description">Descrição</Label>
                 <Textarea
                   id="node-description"
                   value={selectedNode.data.description}
@@ -104,7 +104,7 @@ export const NodeSidebar = ({
                     </div>
                   </div>
                   <div className="text-right text-sm text-[#617269]">
-                    {selectedNode.data.completedTasks ?? 0} concluidas
+                    {selectedNode.data.completedTasks ?? 0} concluídas
                     <br />
                     {selectedNode.data.totalTasks ?? 0} no total
                   </div>
