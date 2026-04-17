@@ -1,0 +1,71 @@
+{
+  "nodes": [
+    {
+      "id": "53e68dc7-29c8-4ef4-8bcd-168ef4fea5db",
+      "position": {
+        "x": -169.399170783736,
+        "y": 114.14370795810949
+      },
+      "data": {
+        "label": "teste"
+      },
+      "measured": {
+        "width": 150,
+        "height": 37
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "76046f67-b09d-46f9-89f9-20a610219a74",
+      "type": "task",
+      "position": {
+        "x": -46.907743942008935,
+        "y": 280.54478495238055
+      },
+      "data": {
+        "label": "teste 1"
+      },
+      "measured": {
+        "width": 63,
+        "height": 40
+      },
+      "selected": true,
+      "dragging": false
+    },
+    {
+      "id": "0687d844-d495-411a-8778-c2cba2ff2aab",
+      "type": "circle",
+      "position": {
+        "x": 17.106931359853498,
+        "y": 468.57714298172385
+      },
+      "data": {
+        "label": "teste"
+      },
+      "measured": {
+        "width": 80,
+        "height": 80
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "53e68dc7-29c8-4ef4-8bcd-168ef4fea5db",
+      "target": "76046f67-b09d-46f9-89f9-20a610219a74",
+      "targetHandle": "in",
+      "type": "custom",
+      "id": "xy-edge__53e68dc7-29c8-4ef4-8bcd-168ef4fea5db-76046f67-b09d-46f9-89f9-20a610219a74in"
+    },
+    {
+      "source": "76046f67-b09d-46f9-89f9-20a610219a74",
+      "sourceHandle": "next",
+      "target": "0687d844-d495-411a-8778-c2cba2ff2aab",
+      "targetHandle": "in",
+      "type": "custom",
+      "id": "xy-edge__76046f67-b09d-46f9-89f9-20a610219a74next-0687d844-d495-411a-8778-c2cba2ff2aabin"
+    }
+  ]
+}
