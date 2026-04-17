@@ -36,7 +36,19 @@ const buildNodeData = (
 };
 
 export const usePathwayHandler = () => {
-  const { nodes, edges, viewport, setNodes, setEdges, setViewport, saveFlow, loadFlow, importFlow } =
+  const {
+    nodes,
+    edges,
+    viewport,
+    setNodes,
+    setEdges,
+    setViewport,
+    saveFlow,
+    loadFlow,
+    importFlow,
+    hasUnsavedChanges,
+    autoSaveError,
+  } =
     usePathwaysHook();
 
   const addNode = useCallback(() => {
@@ -64,5 +76,7 @@ export const usePathwayHandler = () => {
     saveFlow,
     loadFlow,
     importFlow,
+    hasUnsavedChanges,
+    autoSaveError,
   };
 };

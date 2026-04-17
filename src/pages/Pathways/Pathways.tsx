@@ -13,7 +13,7 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import { usePathwayHandler } from "../../handlers/usePathwaysHandler";
-import { useCallback, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { nodeTypes } from "../../types/nodeTypes";
 import "@xyflow/react/dist/style.css";
 import { edgeTypes } from "../../types/edgeTypes";
@@ -271,8 +271,22 @@ export const Pathways = () => {
     saveFlow,
     loadFlow,
     importFlow,
+    hasUnsavedChanges,
+    autoSaveError,
   } =
     usePathwayHandler();
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const invalidNodeIds = useMemo(() => {
     const connectedNodeIds = new Set<string>();
@@ -804,7 +818,7 @@ export const Pathways = () => {
                 erro de conexão
               </div>
               <div className="mt-1 text-sm font-medium text-[#7d2f2f]">
-                Existem {invalidNodeIds.size} elementos sem conexão com outro nó.
+                Existem {invalidNodeIds.size} elementos sem conexão.
               </div>
             </div>
           )}
@@ -818,14 +832,23 @@ export const Pathways = () => {
               </div>
             </div>
           )}
+          {autoSaveError && (
+            <div className="rounded-3xl border border-[#e6c9a8] bg-[#fff8ef] px-4 py-3 text-right shadow-[0_20px_60px_rgba(151,104,33,0.10)] backdrop-blur">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9a6a1f]">
+                erro de auto-save
+              </div>
+              <div className="mt-1 text-sm font-medium text-[#7f5a1d]">
+                {autoSaveError}
+              </div>
+            </div>
+          )}
           <div className="rounded-3xl border border-white/70 bg-white/65 px-4 py-3 text-right shadow-[0_20px_60px_rgba(23,49,38,0.08)] backdrop-blur">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7b8b82]">
-              foco atual
-            </div>
-            <div className="mt-1 text-lg font-semibold text-[#173126]">
-              {selectedNode ? selectedNode.data.title : "Mapa completo"}
-            </div>
             <div className="mt-1 text-sm text-[#62736a]">{completionLabel}</div>
+            {hasUnsavedChanges && (
+              <div className="mt-2 text-xs font-medium text-[#8a6b37]">
+                Existem alteracoes ainda não salvas manualmente.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1072,7 +1095,7 @@ export const Pathways = () => {
                       className="bg-[#fdf0f0] text-[#a63d3d] hover:bg-[#f9dddd]"
                     >
                       <Trash2 />
-                      Excluir nó
+                      Excluir
                     </Button>
                   ) : (
                     <div className="flex items-center gap-2 rounded-2xl border border-[#e7c2c2] bg-[#fff4f4] px-3 py-2">
