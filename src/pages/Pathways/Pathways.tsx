@@ -41,6 +41,7 @@ import {
   updateTaskTree,
   updateTaskTreeByNodeId,
 } from "./pathwayUtils";
+import { autoLayout } from "./autoLayout";
 
 export const Pathways = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -58,6 +59,7 @@ export const Pathways = () => {
     importFlow,
     hasUnsavedChanges,
     autoSaveError,
+    isAutoSaved,
   } = usePathwayHandler();
 
   useEffect(() => {
@@ -503,6 +505,10 @@ export const Pathways = () => {
     [selectedNode, updateNodeData],
   );
 
+  const handleOrganize = useCallback(() => {
+    setNodes((nodesSnapshot) => autoLayout(nodesSnapshot, edges));
+  }, [edges, setNodes]);
+
   const handleClearAll = useCallback(() => {
     setNodes([]);
     setEdges([]);
@@ -569,18 +575,11 @@ export const Pathways = () => {
     <div className="relative h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_top,#f7f1e4_0%,#f0eadf_38%,#ece8de_100%)]">
       <WelcomeModal />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between px-5 py-5 md:px-8">
-        <div className="pointer-events-auto max-w-xl">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between px-5 py-4 md:bottom-auto md:top-0 md:items-start md:py-5 md:px-8">
+        <div className="pointer-events-auto">
           <span className="inline-flex rounded-full border border-white/70 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#52675c] backdrop-blur">
             StudyFlow
           </span>
-          <h1 className="mt-2 text-base font-medium tracking-tight text-[#173126] md:text-lg">
-            Trilha visual de estudos com progresso por assunto.
-          </h1>
-          <p className="mt-2 max-w-lg text-sm leading-6 text-[#56675f] md:text-base">
-            Mapeie a jornada inteira, conecte tópicos, acompanhe tarefas e expanda a
-            trilha sem perder contexto.
-          </p>
         </div>
         <div className="flex items-start gap-3">
           <HelpButton onClick={() => setIsHelpOpen(true)} />
@@ -595,7 +594,7 @@ export const Pathways = () => {
 
       {nodes.length > 0 && (
         <div className="pointer-events-none absolute inset-0 z-20">
-          <div className="absolute bottom-44 left-3 pointer-events-auto">
+          <div className="absolute bottom-24 left-3 pointer-events-auto sm:bottom-44">
             <ClearAllPanel onClearAll={handleClearAll} />
           </div>
         </div>
@@ -636,7 +635,7 @@ export const Pathways = () => {
             pannable
             zoomable
             nodeColor={() => "#365949"}
-            className="!bg-white/90 !backdrop-blur"
+            className="!hidden !bg-white/90 !backdrop-blur sm:!flex"
           />
           <FlowToolbar
             hasConnectionErrors={hasConnectionErrors}
@@ -645,6 +644,7 @@ export const Pathways = () => {
             onLoad={() => void handleLoad()}
             onExport={handleExportFlow}
             onImport={handleImportFile}
+            onOrganize={handleOrganize}
             onCreateTopicNode={handleCreateStandaloneTopicNode}
             onCreateTaskNode={handleCreateStandaloneTaskNode}
           />

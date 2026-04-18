@@ -132,3 +132,10 @@ body {
     @apply font-sans;
   }
 }
+
+/* Push ReactFlow controls above the bottom bar on mobile */
+@media (max-width: 767px) {
+  .react-flow__controls {
+    bottom: 60px !important;
+  }
+}

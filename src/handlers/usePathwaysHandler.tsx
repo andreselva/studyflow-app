@@ -48,6 +48,7 @@ export const usePathwayHandler = () => {
     importFlow,
     hasUnsavedChanges,
     autoSaveError,
+    isAutoSaved,
   } =
     usePathwaysHook();
 
@@ -78,5 +79,6 @@ export const usePathwayHandler = () => {
     importFlow,
     hasUnsavedChanges,
     autoSaveError,
+    isAutoSaved,
   };
 };

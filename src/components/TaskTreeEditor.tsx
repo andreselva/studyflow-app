@@ -30,18 +30,16 @@ function TaskItem({
   onRemoveTask: (taskId: string) => void;
 }) {
   const branchSide = task.side ?? "right";
-  const sideLabel = branchSide === "left" ? "Esq." : "Dir.";
 
   return (
     <div
-      className="space-y-3 rounded-2xl border border-[#d9e5dc] bg-white/80 p-4"
-      style={{ marginLeft: depth > 0 ? 16 : 0 }}
+      className="space-y-2 rounded-xl border border-[#d9e5dc] bg-white/80 p-3 sm:space-y-3 sm:rounded-2xl sm:p-4"
+      style={{ marginLeft: depth > 0 ? 12 : 0 }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         <Checkbox
           checked={task.done}
           onCheckedChange={(checked) => onToggleDone(task.id, checked)}
-          className="mt-1"
         />
         <Input
           value={task.title}
@@ -74,7 +72,7 @@ function TaskItem({
           className="border-[#d9e5dc] bg-white text-[#365949] hover:bg-[#f5fbf7]"
         >
           <Plus />
-          {`Sub ${sideLabel}`}
+          Subtarefa
         </Button>
       </div>
 
@@ -94,7 +92,7 @@ function TaskItem({
         </div>
       ) : (
         <p className="text-sm text-[#8b9a91]">
-          Nenhuma subtarefa ainda. Adicione conforme a trilha evolui.
+          Nenhuma subtarefa. Adicione conforme a trilha evolui.
         </p>
       )}
     </div>
@@ -120,19 +118,21 @@ export function TaskTreeEditor({
             type="button"
             size="sm"
             onClick={() => onAddTask("left")}
+            title="Adicionar tarefa à esquerda"
             className="bg-[#365949] text-white hover:bg-[#28473a]"
           >
             <Plus />
-            Tarefa Esq.
+            <span className="hidden sm:inline">Tarefa </span>Esq.
           </Button>
           <Button
             type="button"
             size="sm"
             onClick={() => onAddTask("right")}
+            title="Adicionar tarefa à direita"
             className="bg-[#365949] text-white hover:bg-[#28473a]"
           >
             <Plus />
-            Tarefa Dir.
+            <span className="hidden sm:inline">Tarefa </span>Dir.
           </Button>
         </div>
       </div>
@@ -150,7 +150,7 @@ export function TaskTreeEditor({
         ))
       ) : (
         <div className="rounded-2xl border border-dashed border-[#c8d9cd] bg-[#f8fbf8] p-5 text-sm text-[#7b8b82]">
-          Esse no ainda nao possui tarefas. Crie a primeira para acompanhar o progresso.
+          Nenhuma tarefa associada. Crie a primeira para acompanhar o progresso.
         </div>
       )}
     </div>

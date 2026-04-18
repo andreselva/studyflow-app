@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Panel } from "@xyflow/react";
 import { ChevronDown, Download, Plus, Save, Target, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { OrganizePanel } from "./OrganizePanel";
 
 type FlowToolbarProps = {
   hasConnectionErrors: boolean;
@@ -10,6 +11,7 @@ type FlowToolbarProps = {
   onLoad: () => void;
   onExport: () => void;
   onImport: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
+  onOrganize: () => void;
   onCreateTopicNode: () => void;
   onCreateTaskNode: () => void;
 };
@@ -21,6 +23,7 @@ export const FlowToolbar = ({
   onLoad,
   onExport,
   onImport,
+  onOrganize,
   onCreateTopicNode,
   onCreateTaskNode,
 }: FlowToolbarProps) => {
@@ -42,7 +45,7 @@ export const FlowToolbar = ({
   return (
     <Panel position="top-center" className="!z-20">
       <div className="rounded-3xl border border-white/70 bg-white/70 p-2 shadow-[0_20px_60px_rgba(23,49,38,0.08)] backdrop-blur">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           <input
             ref={importInputRef}
             type="file"
@@ -57,38 +60,43 @@ export const FlowToolbar = ({
             size="sm"
             onClick={onSave}
             disabled={hasConnectionErrors}
+            title="Salvar"
             className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5] disabled:border-[#e7c2c2] disabled:bg-[#fbf1f1] disabled:text-[#aa6a6a]"
           >
             <Save />
-            Salvar
+            <span className="hidden md:inline">Salvar</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={onLoad}
+            title="Recarregar"
             className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
           >
             <Target />
-            Recarregar
+            <span className="hidden md:inline">Recarregar</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={onExport}
+            title="Exportar"
             className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
           >
             <Download />
-            Exportar
+            <span className="hidden md:inline">Exportar</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => importInputRef.current?.click()}
+            title="Importar"
             className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
           >
             <Upload />
-            Importar
+            <span className="hidden md:inline">Importar</span>
           </Button>
+          <OrganizePanel onOrganize={onOrganize} />
           <div ref={menuRef} className="relative">
             <Button
               type="button"
@@ -96,9 +104,10 @@ export const FlowToolbar = ({
               onClick={() => setIsCreateMenuOpen((open) => !open)}
               className="bg-[#365949] text-white hover:bg-[#28473a]"
               aria-label="Abrir menu de criacao"
+              title="Criar"
             >
               <Plus />
-              Criar
+              <span className="hidden md:inline">Criar</span>
               <ChevronDown />
             </Button>
             {isCreateMenuOpen && (

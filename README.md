@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+# StudyFlow
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+StudyFlow is a personal MVP created to solve a very practical problem: organizing study paths in one place without losing sight of the bigger picture.
 
-Currently, two official plugins are available:
+The idea is simple. Instead of scattering notes, tasks, and topics across different tools, StudyFlow lets you model a study path visually through nodes, connections, tasks, and subtasks.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Why this project exists
 
-## React Compiler
+This project was created from a personal need.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+At the time, I wanted a simple way to:
+- centralize what I needed to study
+- keep a visual overview of the path as a whole
+- break each topic into smaller actionable tasks
+- track progress without losing context
 
-## Expanding the ESLint configuration
+## Current status
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+This repository is an MVP built in a short amount of time, with the main goal of validating the idea and solving a real personal pain point.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+It is public on purpose, as a way to share the concept, the first implementation, and the product thinking behind it.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+There are currently no plans for active long-term evolution.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Main features
+
+- Visual study paths using nodes and connections
+- Support for tasks and nested subtasks
+- Sidebar for editing selected nodes
+- Progress tracking per node
+- Import and export of flow data
+- Local persistence and autosave behavior
+- Automatic layout organization
+
+## Tech stack
+
+- React
+- TypeScript
+- Vite
+- React Flow (`@xyflow/react`)
+- Tailwind CSS
+
+## Running locally
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Notes
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+This project should be seen as an initial usable version, not as a finished product.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+If the idea is useful to you, feel free to explore, adapt, or use it as inspiration.
+
+## Author
+
+Created by André Selva.

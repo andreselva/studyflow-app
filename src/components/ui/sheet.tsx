@@ -71,7 +71,7 @@ function SheetContent({
     <SheetPortal>
       <div
         className={cn(
-          "fixed right-0 top-0 z-50 h-full w-full max-w-xl overflow-y-auto border-l border-white/60 bg-[#f9f5ec]/95 px-6 py-6 shadow-[-24px_0_60px_rgba(23,49,38,0.14)] backdrop-blur md:px-8",
+          "fixed right-0 top-0 z-50 h-full w-full max-w-xl overflow-y-auto border-l border-white/60 bg-[#f9f5ec]/95 px-4 py-4 shadow-[-24px_0_60px_rgba(23,49,38,0.14)] backdrop-blur sm:px-6 sm:py-6 md:px-8",
           className,
         )}
         {...props}
@@ -93,7 +93,7 @@ function SheetTitle({
   className,
   ...props
 }: React.ComponentProps<"h2">) {
-  return <h2 className={cn("mt-2 text-2xl font-semibold text-[#173126]", className)} {...props} />;
+  return <h2 className={cn("mt-1 text-lg font-semibold text-[#173126] sm:mt-2 sm:text-2xl", className)} {...props} />;
 }
 
 function SheetDescription({
