@@ -24,6 +24,7 @@ import { FlowAlerts } from "./FlowAlerts";
 import { FlowToolbar } from "./FlowToolbar";
 import { ClearAllPanel } from "./ClearAllPanel";
 import { NodeSidebar } from "./NodeSidebar";
+import { HelpButton, HelpPanel } from "./HelpPanel";
 import {
   addChildTask,
   buildStandaloneTaskNode,
@@ -44,6 +45,7 @@ import {
 export const Pathways = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const {
     nodes,
     edges,
@@ -580,12 +582,15 @@ export const Pathways = () => {
             trilha sem perder contexto.
           </p>
         </div>
-        <FlowAlerts
-          hasConnectionErrors={hasConnectionErrors}
-          invalidNodeCount={invalidNodeIds.size}
-          storageError={storageError}
-          autoSaveError={autoSaveError}
-        />
+        <div className="flex items-start gap-3">
+          <HelpButton onClick={() => setIsHelpOpen(true)} />
+          <FlowAlerts
+            hasConnectionErrors={hasConnectionErrors}
+            invalidNodeCount={invalidNodeIds.size}
+            storageError={storageError}
+            autoSaveError={autoSaveError}
+          />
+        </div>
       </div>
 
       {nodes.length > 0 && (
@@ -659,6 +664,8 @@ export const Pathways = () => {
         onTaskToggle={handleTaskToggle}
         onRemoveTask={handleTaskRemove}
       />
+
+      <HelpPanel open={isHelpOpen} onOpenChange={setIsHelpOpen} />
     </div>
   );
 };
