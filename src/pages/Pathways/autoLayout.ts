@@ -2,13 +2,17 @@ import type { Edge } from "@xyflow/react";
 import type { StudyNode, StudyTask } from "@/types/pathway";
 
 const TASK_H_OFFSET = 250;
-const TASK_V_GAP = 90;
+const TASK_V_GAP = 100;
+const BRANCH_EXTRA_GAP = 40;
+const CHILD_H_INDENT = 35; // horizontal shift per nesting level (left goes left, right goes right)
 const TOPIC_V_MARGIN = 80;
 const CHAIN_H_MARGIN = 100;
 const MIN_HALF_HEIGHT = 50;
 
 function taskSubtreeHeight(task: StudyTask): number {
-  return TASK_V_GAP + task.children.reduce((sum, child) => sum + taskSubtreeHeight(child), 0);
+  if (task.children.length === 0) return TASK_V_GAP;
+  const childrenHeight = task.children.reduce((sum, child) => sum + taskSubtreeHeight(child), 0);
+  return TASK_V_GAP + childrenHeight + BRANCH_EXTRA_GAP;
 }
 
 function taskSideHeight(tasks: StudyTask[], side: string): number {
@@ -24,22 +28,25 @@ function topicHalfHeight(topicNode: StudyNode): number {
   return Math.max(lh, rh, MIN_HALF_HEIGHT);
 }
 
-// Place task at (x, y); children go below at the same x.
-// Returns total vertical space consumed.
+// Place task at (x, y); children go below, shifted slightly in the same direction.
+// Returns total vertical space consumed (must match taskSubtreeHeight).
 function layoutTask(
   task: StudyTask,
   x: number,
   y: number,
+  direction: 1 | -1,
   positions: Map<string, { x: number; y: number }>,
 ): number {
   if (task.nodeId) {
     positions.set(task.nodeId, { x, y });
   }
+  if (task.children.length === 0) return TASK_V_GAP;
+  const childX = x + direction * CHILD_H_INDENT;
   let childY = y + TASK_V_GAP;
   for (const child of task.children) {
-    childY += layoutTask(child, x, childY, positions);
+    childY += layoutTask(child, childX, childY, direction, positions);
   }
-  return childY - y;
+  return childY - y + BRANCH_EXTRA_GAP;
 }
 
 // Tasks are vertically centered around topicY so branches feel balanced
@@ -54,13 +61,13 @@ function layoutTopicTasks(
   const leftHeight = taskSideHeight(tasks, "left");
   let leftY = topicY - leftHeight / 2;
   for (const task of tasks.filter((t) => t.side === "left")) {
-    leftY += layoutTask(task, topicX - TASK_H_OFFSET, leftY, positions);
+    leftY += layoutTask(task, topicX - TASK_H_OFFSET, leftY, -1, positions);
   }
 
   const rightHeight = taskSideHeight(tasks, "right");
   let rightY = topicY - rightHeight / 2;
   for (const task of tasks.filter((t) => t.side === "right")) {
-    rightY += layoutTask(task, topicX + TASK_H_OFFSET, rightY, positions);
+    rightY += layoutTask(task, topicX + TASK_H_OFFSET, rightY, 1, positions);
   }
 }
 
