@@ -54,7 +54,7 @@ describe("pathwayUtils", () => {
     expect(taskData.progress).toBe(50);
   });
 
-  it("cria no standalone e tarefa conectada ao pai", () => {
+  it("cria tópico standalone e tarefa conectada ao pai", () => {
     const rootNode = buildStandaloneTopicNode({ x: 120, y: 80 });
     const childNode = buildTaskNode(rootNode, 1, "left", rootNode.id);
     const childTask = createTaskEntry(childNode.id, "left");

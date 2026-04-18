@@ -53,7 +53,7 @@ export const usePathwayHandler = () => {
     usePathwaysHook();
 
   const addNode = useCallback(() => {
-    const title = normalizeNodeTitle(prompt("Nome do assunto:") ?? "");
+    const title = normalizeNodeTitle(prompt("Nome do tópico:") ?? "");
     if (!title) return;
 
     const newNode = {

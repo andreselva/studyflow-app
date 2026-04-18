@@ -21,7 +21,7 @@ export const WelcomeModal = () => {
           O StudyFlow organiza sua trilha de estudos de forma visual.
         </h2>
         <p className="mt-3 text-sm leading-6 text-[#56675f]">
-          Crie nós para representar tópicos, adicione tarefas no canvas, conecte os
+          Crie tópicos para representar partes da trilha, adicione tarefas no canvas, conecte os
           elementos para montar a estrutura da trilha e acompanhe o progresso de cada
           etapa. Você também pode salvar no navegador, exportar a trilha em JSON e
           importar depois.

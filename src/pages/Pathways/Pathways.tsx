@@ -12,7 +12,7 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import { usePathwayHandler } from "../../handlers/usePathwaysHandler";
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { nodeTypes } from "../../types/nodeTypes";
 import "@xyflow/react/dist/style.css";
 import { edgeTypes } from "../../types/edgeTypes";
@@ -25,6 +25,7 @@ import { FlowToolbar } from "./FlowToolbar";
 import { ClearAllPanel } from "./ClearAllPanel";
 import { NodeSidebar } from "./NodeSidebar";
 import { HelpButton, HelpPanel } from "./HelpPanel";
+import { Button } from "@/components/ui/button";
 import {
   addChildTask,
   buildStandaloneTaskNode,
@@ -47,6 +48,11 @@ export const Pathways = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [storageError, setStorageError] = useState<string | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isOrganizeConfirmOpen, setIsOrganizeConfirmOpen] = useState(false);
+  const [organizeUndoSecondsLeft, setOrganizeUndoSecondsLeft] = useState(0);
+  const [organizeSnapshot, setOrganizeSnapshot] = useState<Map<string, StudyNode["position"]> | null>(
+    null,
+  );
   const {
     nodes,
     edges,
@@ -61,6 +67,8 @@ export const Pathways = () => {
     autoSaveError,
     isAutoSaved,
   } = usePathwayHandler();
+  const organizeUndoTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const organizeUndoIntervalRef = useRef<ReturnType<typeof window.setInterval> | null>(null);
 
   useEffect(() => {
     if (!hasUnsavedChanges) return;
@@ -71,6 +79,17 @@ export const Pathways = () => {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    return () => {
+      if (organizeUndoTimeoutRef.current) {
+        window.clearTimeout(organizeUndoTimeoutRef.current);
+      }
+      if (organizeUndoIntervalRef.current) {
+        window.clearInterval(organizeUndoIntervalRef.current);
+      }
+    };
+  }, []);
 
   const invalidNodeIds = useMemo(() => {
     const connectedNodeIds = new Set<string>();
@@ -505,9 +524,57 @@ export const Pathways = () => {
     [selectedNode, updateNodeData],
   );
 
+  const clearOrganizeUndo = useCallback(() => {
+    if (organizeUndoTimeoutRef.current) {
+      window.clearTimeout(organizeUndoTimeoutRef.current);
+      organizeUndoTimeoutRef.current = null;
+    }
+    if (organizeUndoIntervalRef.current) {
+      window.clearInterval(organizeUndoIntervalRef.current);
+      organizeUndoIntervalRef.current = null;
+    }
+    setOrganizeSnapshot(null);
+    setOrganizeUndoSecondsLeft(0);
+  }, []);
+
+  const startOrganizeUndoWindow = useCallback(() => {
+    if (organizeUndoTimeoutRef.current) {
+      window.clearTimeout(organizeUndoTimeoutRef.current);
+    }
+    if (organizeUndoIntervalRef.current) {
+      window.clearInterval(organizeUndoIntervalRef.current);
+    }
+
+    const expiresAt = Date.now() + 15000;
+    setOrganizeUndoSecondsLeft(15);
+
+    organizeUndoIntervalRef.current = window.setInterval(() => {
+      const nextSeconds = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      setOrganizeUndoSecondsLeft(nextSeconds);
+    }, 250);
+
+    organizeUndoTimeoutRef.current = window.setTimeout(() => {
+      clearOrganizeUndo();
+    }, 15000);
+  }, [clearOrganizeUndo]);
+
   const handleOrganize = useCallback(() => {
+    setOrganizeSnapshot(new Map(nodes.map((node) => [node.id, node.position])));
     setNodes((nodesSnapshot) => autoLayout(nodesSnapshot, edges));
-  }, [edges, setNodes]);
+    setIsOrganizeConfirmOpen(false);
+    startOrganizeUndoWindow();
+  }, [edges, nodes, setNodes, startOrganizeUndoWindow]);
+
+  const handleRevertOrganize = useCallback(() => {
+    if (!organizeSnapshot) return;
+    setNodes((nodesSnapshot) =>
+      nodesSnapshot.map((node) => {
+        const previousPosition = organizeSnapshot.get(node.id);
+        return previousPosition ? { ...node, position: previousPosition } : node;
+      }),
+    );
+    clearOrganizeUndo();
+  }, [clearOrganizeUndo, organizeSnapshot, setNodes]);
 
   const handleClearAll = useCallback(() => {
     setNodes([]);
@@ -527,7 +594,6 @@ export const Pathways = () => {
   }, [edges, nodes, viewport]);
 
   const handleSave = useCallback(async () => {
-    if (hasConnectionErrors) return;
     try {
       await saveFlow();
       setStorageError(null);
@@ -536,7 +602,7 @@ export const Pathways = () => {
         error instanceof Error ? error.message : "Nao foi possivel salvar o fluxo.",
       );
     }
-  }, [hasConnectionErrors, saveFlow]);
+  }, [saveFlow]);
 
   const handleLoad = useCallback(async () => {
     try {
@@ -601,6 +667,45 @@ export const Pathways = () => {
         </div>
       )}
 
+      {isOrganizeConfirmOpen && (
+        <div className="pointer-events-none absolute inset-0 z-30 flex items-start justify-center px-4 pt-22 sm:pt-24">
+          <div className="pointer-events-auto max-w-xl rounded-[28px] border border-[#e4d9c4] bg-[#fffaf1]/96 p-4 shadow-[0_24px_60px_rgba(23,49,38,0.14)] backdrop-blur sm:p-5">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8a6b37]">
+              Confirmar organização
+            </div>
+            <p className="mt-2 text-sm leading-6 text-[#5d4c2f]">
+              A estrutura atual será remodelada para reorganizar os tópicos e tarefas no
+              canvas. Você poderá reverter para a estrutura anterior por 15 segundos.
+            </p>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsOrganizeConfirmOpen(false)}
+                className="border-[#d9d5cc] bg-white text-[#5f6863] hover:bg-[#f7f4ef]"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleOrganize}
+                className="bg-[#8a6b37] text-white hover:bg-[#765a2d]"
+              >
+                Organizar agora
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center px-4 py-3">
+        <div className="px-3 py-1 text-[10px] font-medium tracking-[0.14em] text-[#5e7066]/58 sm:text-[11px]">
+          © 2026 StudyFlow. Todos os direitos reservados.
+        </div>
+      </div>
+
       <PathwayNodeActionsProvider value={{ toggleTaskNodeDone: handleToggleTaskNodeDone }}>
         <ReactFlow
           nodes={nodesForCanvas}
@@ -639,13 +744,15 @@ export const Pathways = () => {
             className="!hidden !bg-white/90 !backdrop-blur sm:!flex"
           />
           <FlowToolbar
-            hasConnectionErrors={hasConnectionErrors}
             canCreateTask={nodes.length > 0}
             onSave={() => void handleSave()}
             onLoad={() => void handleLoad()}
             onExport={handleExportFlow}
             onImport={handleImportFile}
-            onOrganize={handleOrganize}
+            onOrganize={() => setIsOrganizeConfirmOpen(true)}
+            canRevertOrganize={Boolean(organizeSnapshot)}
+            onRevertOrganize={handleRevertOrganize}
+            organizeUndoSecondsLeft={organizeUndoSecondsLeft}
             onCreateTopicNode={handleCreateStandaloneTopicNode}
             onCreateTaskNode={handleCreateStandaloneTaskNode}
           />

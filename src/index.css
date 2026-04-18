@@ -139,3 +139,25 @@ body {
     bottom: 60px !important;
   }
 }
+
+.help-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(126, 145, 134, 0.38) rgba(249, 245, 236, 0.2);
+}
+
+.help-modal-scroll::-webkit-scrollbar {
+  width: 7px;
+}
+
+.help-modal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.help-modal-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(126, 145, 134, 0.38);
+}
+
+.help-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(111, 129, 119, 0.5);
+}
