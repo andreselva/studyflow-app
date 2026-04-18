@@ -180,7 +180,7 @@ export const buildStandaloneTopicNode = (position: {
   position,
   data: enrichNodeData({
     kind: "topic",
-    title: normalizeNodeTitle("Novo nó"),
+    title: normalizeNodeTitle("Novo tópico"),
     description: "",
     tasks: [],
   }),

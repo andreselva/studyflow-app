@@ -61,7 +61,7 @@ export const NodeSidebar = ({
           <SheetHeader>
             <div>
               <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#7b8b82]">
-                assunto selecionado
+                tópico selecionado
               </span>
               <SheetTitle>{selectedNode.data.title}</SheetTitle>
             </div>

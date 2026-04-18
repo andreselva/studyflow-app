@@ -5,25 +5,29 @@ import { Button } from "@/components/ui/button";
 import { OrganizePanel } from "./OrganizePanel";
 
 type FlowToolbarProps = {
-  hasConnectionErrors: boolean;
   canCreateTask: boolean;
   onSave: () => void;
   onLoad: () => void;
   onExport: () => void;
   onImport: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   onOrganize: () => void;
+  canRevertOrganize: boolean;
+  onRevertOrganize: () => void;
+  organizeUndoSecondsLeft: number;
   onCreateTopicNode: () => void;
   onCreateTaskNode: () => void;
 };
 
 export const FlowToolbar = ({
-  hasConnectionErrors,
   canCreateTask,
   onSave,
   onLoad,
   onExport,
   onImport,
   onOrganize,
+  canRevertOrganize,
+  onRevertOrganize,
+  organizeUndoSecondsLeft,
   onCreateTopicNode,
   onCreateTaskNode,
 }: FlowToolbarProps) => {
@@ -59,9 +63,8 @@ export const FlowToolbar = ({
             variant="outline"
             size="sm"
             onClick={onSave}
-            disabled={hasConnectionErrors}
             title="Salvar"
-            className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5] disabled:border-[#e7c2c2] disabled:bg-[#fbf1f1] disabled:text-[#aa6a6a]"
+            className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
           >
             <Save />
             <span className="hidden md:inline">Salvar</span>
@@ -96,7 +99,12 @@ export const FlowToolbar = ({
             <Upload />
             <span className="hidden md:inline">Importar</span>
           </Button>
-          <OrganizePanel onOrganize={onOrganize} />
+          <OrganizePanel
+            canRevert={canRevertOrganize}
+            onOrganize={onOrganize}
+            onRevert={onRevertOrganize}
+            secondsLeft={organizeUndoSecondsLeft}
+          />
           <div ref={menuRef} className="relative">
             <Button
               type="button"
@@ -120,14 +128,14 @@ export const FlowToolbar = ({
                     setIsCreateMenuOpen(false);
                   }}
                 >
-                  Nó
+                  Tópico
                 </button>
                 <button
                   type="button"
                   disabled={!canCreateTask}
                   title={
                     !canCreateTask
-                      ? "Crie ao menos um nó antes de adicionar tarefas"
+                      ? "Crie ao menos um tópico antes de adicionar tarefas"
                       : undefined
                   }
                   className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm font-medium text-[#173126] transition-colors hover:bg-[#f4f8f5] disabled:cursor-not-allowed disabled:text-[#9da8a2] disabled:hover:bg-transparent"

@@ -40,7 +40,7 @@ const enrichNodeData = (data?: Partial<StudyNodeData>): StudyNodeData => {
     rootNodeId: data?.rootNodeId,
     parentNodeId: data?.parentNodeId,
     side: data?.side,
-    title: normalizeNodeTitle(data?.title ?? data?.description ?? "Novo assunto"),
+    title: normalizeNodeTitle(data?.title ?? data?.description ?? "Novo tópico"),
     description: data?.description ?? "",
     tasks,
     done: data?.done ?? false,
@@ -136,7 +136,7 @@ const validateFlowPayload = (data: unknown) => {
     }
 
     if (nodeIds.has(node.id)) {
-      throw new Error(`ID de no duplicado encontrado: ${node.id}.`);
+      throw new Error(`ID de tópico duplicado encontrado: ${node.id}.`);
     }
     nodeIds.add(node.id);
 
@@ -214,11 +214,11 @@ const validateFlowPayload = (data: unknown) => {
     }
 
     if (typeof edge.source !== "string" || !nodeIds.has(edge.source)) {
-      throw new Error(`edges[${index}].source referencia um no invalido.`);
+      throw new Error(`edges[${index}].source referencia um tópico inválido.`);
     }
 
     if (typeof edge.target !== "string" || !nodeIds.has(edge.target)) {
-      throw new Error(`edges[${index}].target referencia um no invalido.`);
+      throw new Error(`edges[${index}].target referencia um tópico inválido.`);
     }
   });
 };
@@ -261,7 +261,7 @@ const normalizeNodes = (rawNodes: unknown[]): StudyNode[] =>
     const node = rawNode as Partial<StudyNode> & {
       data?: { label?: string } & Partial<StudyNodeData>;
     };
-    const title = node.data?.title ?? node.data?.label ?? `Assunto ${index + 1}`;
+    const title = node.data?.title ?? node.data?.label ?? `Tópico ${index + 1}`;
 
     return {
       id: node.id ?? crypto.randomUUID(),

@@ -27,12 +27,12 @@ export const FlowAlerts = ({
     {hasConnectionErrors && (
       <div className="rounded-2xl border border-[#e4b6b6] bg-[#fff4f4] px-3 py-2 text-right shadow-[0_20px_60px_rgba(163,63,63,0.10)] backdrop-blur sm:rounded-3xl sm:px-4 sm:py-3">
         <div className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#a63d3d] sm:text-[11px] sm:tracking-[0.22em]">
-          erro de conexão
+          conexões pendentes
         </div>
         <div className="mt-0.5 text-[11px] font-medium text-[#7d2f2f] sm:mt-1 sm:text-sm">
           {invalidNodeCount > 1
-            ? `${invalidNodeCount} sem conexão`
-            : "1 elemento sem conexão."}
+            ? `${invalidNodeCount} elementos ainda sem conexão`
+            : "1 elemento ainda sem conexão."}
         </div>
       </div>
     )}
