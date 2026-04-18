@@ -55,4 +55,4 @@ If the idea is useful to you, feel free to explore, adapt, or use it as inspirat
 
 ## Author
 
-Created by André Silva.
+Created by André Selva.
