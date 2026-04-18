@@ -33,8 +33,8 @@ function TaskItem({
 
   return (
     <div
-      className="space-y-3 rounded-2xl border border-[#d9e5dc] bg-white/80 p-4"
-      style={{ marginLeft: depth > 0 ? 16 : 0 }}
+      className="space-y-2 rounded-xl border border-[#d9e5dc] bg-white/80 p-3 sm:space-y-3 sm:rounded-2xl sm:p-4"
+      style={{ marginLeft: depth > 0 ? 12 : 0 }}
     >
       <div className="flex items-center gap-3">
         <Checkbox

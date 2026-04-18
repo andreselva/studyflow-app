@@ -573,8 +573,8 @@ export const Pathways = () => {
     <div className="relative h-screen w-full overflow-hidden bg-[radial-gradient(circle_at_top,#f7f1e4_0%,#f0eadf_38%,#ece8de_100%)]">
       <WelcomeModal />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between px-5 py-5 md:px-8">
-        <div className="pointer-events-auto max-w-xl">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between px-5 py-4 md:bottom-auto md:top-0 md:items-start md:py-5 md:px-8">
+        <div className="pointer-events-auto">
           <span className="inline-flex rounded-full border border-white/70 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#52675c] backdrop-blur">
             StudyFlow
           </span>
@@ -590,7 +590,7 @@ export const Pathways = () => {
 
       {nodes.length > 0 && (
         <div className="pointer-events-none absolute inset-0 z-20">
-          <div className="absolute bottom-32 left-3 pointer-events-auto sm:bottom-44">
+          <div className="absolute bottom-24 left-3 pointer-events-auto sm:bottom-44">
             <ClearAllPanel onClearAll={handleClearAll} />
           </div>
         </div>
