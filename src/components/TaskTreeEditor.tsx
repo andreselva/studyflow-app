@@ -118,19 +118,21 @@ export function TaskTreeEditor({
             type="button"
             size="sm"
             onClick={() => onAddTask("left")}
+            title="Adicionar tarefa à esquerda"
             className="bg-[#365949] text-white hover:bg-[#28473a]"
           >
             <Plus />
-            Tarefa Esq.
+            <span className="hidden sm:inline">Tarefa </span>Esq.
           </Button>
           <Button
             type="button"
             size="sm"
             onClick={() => onAddTask("right")}
+            title="Adicionar tarefa à direita"
             className="bg-[#365949] text-white hover:bg-[#28473a]"
           >
             <Plus />
-            Tarefa Dir.
+            <span className="hidden sm:inline">Tarefa </span>Dir.
           </Button>
         </div>
       </div>
