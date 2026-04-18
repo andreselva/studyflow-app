@@ -1,6 +1,9 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { Edge } from "@xyflow/react";
-import { normalizeNodeTitle } from "@/lib/node-title";
+import {
+  NODE_DESCRIPTION_MAX_LENGTH,
+  normalizeNodeTitle,
+} from "@/lib/node-title";
 import type { StudyEdge, StudyNode, StudyNodeData, StudyTask, TaskSide } from "@/types/pathway";
 import {
   addChildTask,
@@ -263,7 +266,10 @@ export function usePathwaysTaskTreeController({
   const handleDescriptionChange = useCallback(
     (description: string) => {
       if (!selectedNode) return;
-      updateNodeData(selectedNode.id, (data) => ({ ...data, description }));
+      updateNodeData(selectedNode.id, (data) => ({
+        ...data,
+        description: description.slice(0, NODE_DESCRIPTION_MAX_LENGTH),
+      }));
     },
     [selectedNode, updateNodeData],
   );
