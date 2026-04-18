@@ -93,7 +93,7 @@ function SheetTitle({
   className,
   ...props
 }: React.ComponentProps<"h2">) {
-  return <h2 className={cn("mt-2 text-2xl font-semibold text-[#173126]", className)} {...props} />;
+  return <h2 className={cn("mt-1 text-lg font-semibold text-[#173126] sm:mt-2 sm:text-2xl", className)} {...props} />;
 }
 
 function SheetDescription({

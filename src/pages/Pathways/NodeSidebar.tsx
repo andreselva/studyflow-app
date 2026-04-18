@@ -70,8 +70,8 @@ export const NodeSidebar = ({
             </SheetClose>
           </SheetHeader>
 
-          <div className="mt-6 rounded-3xl border border-[#dde8e0] bg-white/85 p-5">
-            <div className="grid gap-5">
+          <div className="mt-3 rounded-2xl border border-[#dde8e0] bg-white/85 p-3 sm:mt-6 sm:rounded-3xl sm:p-5">
+            <div className="grid gap-3 sm:gap-5">
               <label className="grid gap-2">
                 <Label htmlFor="node-title">Nome</Label>
                 <Input
@@ -93,23 +93,23 @@ export const NodeSidebar = ({
                 />
               </label>
 
-              <div className="rounded-2xl border border-[#e3ece5] bg-[#f6fbf7] p-4">
+              <div className="rounded-xl border border-[#e3ece5] bg-[#f6fbf7] p-3 sm:rounded-2xl sm:p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7b8b82]">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7b8b82] sm:text-xs">
                       Progresso
                     </div>
-                    <div className="mt-1 text-2xl font-semibold text-[#173126]">
+                    <div className="mt-0.5 text-xl font-semibold text-[#173126] sm:mt-1 sm:text-2xl">
                       {Math.round(selectedNode.data.progress ?? 0)}%
                     </div>
                   </div>
-                  <div className="text-right text-sm text-[#617269]">
+                  <div className="text-right text-xs text-[#617269] sm:text-sm">
                     {selectedNode.data.completedTasks ?? 0} concluídas
                     <br />
                     {selectedNode.data.totalTasks ?? 0} no total
                   </div>
                 </div>
-                <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#dfeae2]">
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#dfeae2] sm:mt-4 sm:h-3">
                   <div
                     className="h-full rounded-full bg-[#365949] transition-[width] duration-300"
                     style={{ width: `${selectedNode.data.progress ?? 0}%` }}
@@ -161,7 +161,7 @@ export const NodeSidebar = ({
             </div>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-3 sm:mt-6">
             <TaskTreeEditor
               tasks={visibleTasks}
               onAddTask={onAddTask}
