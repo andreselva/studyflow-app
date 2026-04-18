@@ -16,7 +16,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } f
 import { nodeTypes } from "../../types/nodeTypes";
 import "@xyflow/react/dist/style.css";
 import { edgeTypes } from "../../types/edgeTypes";
-import { normalizeNodeTitle } from "@/lib/node-title";
+import {
+  NODE_DESCRIPTION_MAX_LENGTH,
+  normalizeNodeTitle,
+} from "@/lib/node-title";
 import type { StudyNode, StudyNodeData, StudyTask, TaskSide } from "@/types/pathway";
 import { PathwayNodeActionsProvider } from "@/components/pathways/PathwayNodeActionsProvider";
 import { WelcomeModal } from "./WelcomeModal";
@@ -519,7 +522,10 @@ export const Pathways = () => {
   const handleDescriptionChange = useCallback(
     (description: string) => {
       if (!selectedNode) return;
-      updateNodeData(selectedNode.id, (data) => ({ ...data, description }));
+      updateNodeData(selectedNode.id, (data) => ({
+        ...data,
+        description: description.slice(0, NODE_DESCRIPTION_MAX_LENGTH),
+      }));
     },
     [selectedNode, updateNodeData],
   );

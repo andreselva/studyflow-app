@@ -13,7 +13,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { NODE_TITLE_MAX_LENGTH } from "@/lib/node-title";
+import {
+  NODE_DESCRIPTION_MAX_LENGTH,
+  NODE_TITLE_MAX_LENGTH,
+} from "@/lib/node-title";
 import type { StudyNode, StudyTask, TaskSide } from "@/types/pathway";
 import { TaskTreeEditor } from "@/components/TaskTreeEditor";
 
@@ -87,10 +90,14 @@ export const NodeSidebar = ({
                 <Textarea
                   id="node-description"
                   value={selectedNode.data.description}
+                  maxLength={NODE_DESCRIPTION_MAX_LENGTH}
                   onChange={(event) => onDescriptionChange(event.target.value)}
                   rows={4}
                   className="resize-none"
                 />
+                <span className="text-xs text-[#617269]">
+                  {selectedNode.data.description.length}/{NODE_DESCRIPTION_MAX_LENGTH}
+                </span>
               </label>
 
               <div className="rounded-xl border border-[#e3ece5] bg-[#f6fbf7] p-3 sm:rounded-2xl sm:p-4">
