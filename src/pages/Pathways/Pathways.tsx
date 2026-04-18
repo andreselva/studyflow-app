@@ -40,6 +40,7 @@ import {
   updateTaskTree,
   updateTaskTreeByNodeId,
 } from "./pathwayUtils";
+import { autoLayout } from "./autoLayout";
 
 export const Pathways = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -502,6 +503,10 @@ export const Pathways = () => {
     [selectedNode, updateNodeData],
   );
 
+  const handleOrganize = useCallback(() => {
+    setNodes((nodesSnapshot) => autoLayout(nodesSnapshot, edges));
+  }, [edges, setNodes]);
+
   const handleClearAll = useCallback(() => {
     setNodes([]);
     setEdges([]);
@@ -635,6 +640,7 @@ export const Pathways = () => {
             onLoad={() => void handleLoad()}
             onExport={handleExportFlow}
             onImport={handleImportFile}
+            onOrganize={handleOrganize}
             onCreateTopicNode={handleCreateStandaloneTopicNode}
             onCreateTaskNode={handleCreateStandaloneTaskNode}
           />

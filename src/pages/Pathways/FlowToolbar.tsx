@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Panel } from "@xyflow/react";
 import { ChevronDown, Download, Plus, Save, Target, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { OrganizePanel } from "./OrganizePanel";
 
 type FlowToolbarProps = {
   hasConnectionErrors: boolean;
@@ -10,6 +11,7 @@ type FlowToolbarProps = {
   onLoad: () => void;
   onExport: () => void;
   onImport: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
+  onOrganize: () => void;
   onCreateTopicNode: () => void;
   onCreateTaskNode: () => void;
 };
@@ -21,6 +23,7 @@ export const FlowToolbar = ({
   onLoad,
   onExport,
   onImport,
+  onOrganize,
   onCreateTopicNode,
   onCreateTaskNode,
 }: FlowToolbarProps) => {
@@ -89,6 +92,7 @@ export const FlowToolbar = ({
             <Upload />
             Importar
           </Button>
+          <OrganizePanel onOrganize={onOrganize} />
           <div ref={menuRef} className="relative">
             <Button
               type="button"
