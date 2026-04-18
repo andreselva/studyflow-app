@@ -590,7 +590,7 @@ export const Pathways = () => {
 
       {nodes.length > 0 && (
         <div className="pointer-events-none absolute inset-0 z-20">
-          <div className="absolute bottom-44 left-3 pointer-events-auto">
+          <div className="absolute bottom-32 left-3 pointer-events-auto sm:bottom-44">
             <ClearAllPanel onClearAll={handleClearAll} />
           </div>
         </div>
@@ -631,7 +631,7 @@ export const Pathways = () => {
             pannable
             zoomable
             nodeColor={() => "#365949"}
-            className="!bg-white/90 !backdrop-blur"
+            className="!hidden !bg-white/90 !backdrop-blur sm:!flex"
           />
           <FlowToolbar
             hasConnectionErrors={hasConnectionErrors}

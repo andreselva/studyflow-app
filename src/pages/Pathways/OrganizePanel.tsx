@@ -10,9 +10,10 @@ export const OrganizePanel = ({ onOrganize }: OrganizePanelProps) => (
     variant="outline"
     size="sm"
     onClick={onOrganize}
+    title="Organizar"
     className="border-[#d4dfd7] bg-white text-[#173126] hover:bg-[#f4f8f5]"
   >
     <LayoutGrid />
-    Organizar
+    <span className="hidden md:inline">Organizar</span>
   </Button>
 );

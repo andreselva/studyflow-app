@@ -13,11 +13,11 @@ export const WelcomeModal = () => {
 
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-[#173126]/30 px-4 backdrop-blur-[2px]">
-      <div className="w-full max-w-xl rounded-[28px] border border-white/70 bg-white/95 p-6 shadow-[0_24px_80px_rgba(23,49,38,0.22)]">
+      <div className="w-full max-w-xl rounded-[20px] border border-white/70 bg-white/95 p-4 shadow-[0_24px_80px_rgba(23,49,38,0.22)] sm:rounded-[28px] sm:p-6">
         <span className="inline-flex rounded-full border border-[#dce7df] bg-[#f5fbf7] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#52675c]">
           Bem-vindo
         </span>
-        <h2 className="mt-4 text-2xl font-semibold text-[#173126]">
+        <h2 className="mt-3 text-xl font-semibold text-[#173126] sm:mt-4 sm:text-2xl">
           O StudyFlow organiza sua trilha de estudos de forma visual.
         </h2>
         <p className="mt-3 text-sm leading-6 text-[#56675f]">

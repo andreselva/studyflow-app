@@ -130,7 +130,7 @@ export const NodeSidebar = ({
                     Excluir
                   </Button>
                 ) : (
-                  <div className="flex items-center gap-2 rounded-2xl border border-[#e7c2c2] bg-[#fff4f4] px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#e7c2c2] bg-[#fff4f4] px-3 py-2">
                     <span className="text-xs font-medium text-[#8f3c3c]">
                       Confirmar exclusão?
                     </span>
