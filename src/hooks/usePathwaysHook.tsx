@@ -358,6 +358,11 @@ export const usePathwaysHook = () => {
         edges: nextEdges,
         viewport: nextViewport,
       } = normalizeFlowPayload(data);
+      const normalizedPayload = JSON.stringify({
+        nodes: nextNodes,
+        edges: nextEdges,
+        viewport: nextViewport,
+      });
 
       if (nextNodes.length === 0) {
         const fallback = defaultFlow();
@@ -375,9 +380,9 @@ export const usePathwaysHook = () => {
       setNodes(nextNodes);
       setEdges(nextEdges);
       setViewport(nextViewport);
-      manualSavedPayloadRef.current = chosenPayload;
-      lastAutoSavedPayloadRef.current = chosenPayload;
-      latestPayloadRef.current = chosenPayload;
+      manualSavedPayloadRef.current = normalizedPayload;
+      lastAutoSavedPayloadRef.current = normalizedPayload;
+      latestPayloadRef.current = normalizedPayload;
       setHasUnsavedChanges(false);
       setAutoSaveError(null);
     } catch {

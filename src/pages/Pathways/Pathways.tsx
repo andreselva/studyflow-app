@@ -24,6 +24,7 @@ import { FlowAlerts } from "./FlowAlerts";
 import { FlowToolbar } from "./FlowToolbar";
 import { ClearAllPanel } from "./ClearAllPanel";
 import { NodeSidebar } from "./NodeSidebar";
+import { HelpButton, HelpPanel } from "./HelpPanel";
 import {
   addChildTask,
   buildStandaloneTaskNode,
@@ -45,6 +46,7 @@ import { autoLayout } from "./autoLayout";
 export const Pathways = () => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const {
     nodes,
     edges,
@@ -574,18 +576,21 @@ export const Pathways = () => {
       <WelcomeModal />
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between px-5 py-4 md:bottom-auto md:top-0 md:items-start md:py-5 md:px-8">
-        <div className="pointer-events-auto">
+        <div className="pointer-events-auto flex items-center gap-3">
           <span className="inline-flex rounded-full border border-white/70 bg-white/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#52675c] backdrop-blur">
             StudyFlow
           </span>
+          <HelpButton onClick={() => setIsHelpOpen(true)} />
         </div>
-        <FlowAlerts
-          hasConnectionErrors={hasConnectionErrors}
-          invalidNodeCount={invalidNodeIds.size}
-          storageError={storageError}
-          autoSaveError={autoSaveError}
-          isAutoSaved={isAutoSaved}
-        />
+        <div className="pointer-events-auto flex items-start gap-3">
+          <FlowAlerts
+            hasConnectionErrors={hasConnectionErrors}
+            invalidNodeCount={invalidNodeIds.size}
+            storageError={storageError}
+            autoSaveError={autoSaveError}
+            isAutoSaved={isAutoSaved}
+          />
+        </div>
       </div>
 
       {nodes.length > 0 && (
@@ -660,6 +665,8 @@ export const Pathways = () => {
         onTaskToggle={handleTaskToggle}
         onRemoveTask={handleTaskRemove}
       />
+
+      <HelpPanel open={isHelpOpen} onOpenChange={setIsHelpOpen} />
     </div>
   );
 };
