@@ -4,7 +4,7 @@ import type { StudyNode, StudyTask } from "@/types/pathway";
 const TASK_H_OFFSET = 250;
 const TASK_V_GAP = 100;
 const BRANCH_EXTRA_GAP = 40;
-const CHILD_H_INDENT = 35; // horizontal shift per nesting level (left goes left, right goes right)
+const CHILD_H_INDENT = 35;
 const TOPIC_V_MARGIN = 80;
 const CHAIN_H_MARGIN = 100;
 const MIN_HALF_HEIGHT = 50;
@@ -21,15 +21,12 @@ function taskSideHeight(tasks: StudyTask[], side: string): number {
     .reduce((sum, t) => sum + taskSubtreeHeight(t), 0);
 }
 
-// Half the vertical span a topic node occupies (tasks are centered on topicY)
 function topicHalfHeight(topicNode: StudyNode): number {
   const lh = taskSideHeight(topicNode.data.tasks, "left") / 2;
   const rh = taskSideHeight(topicNode.data.tasks, "right") / 2;
   return Math.max(lh, rh, MIN_HALF_HEIGHT);
 }
 
-// Place task at (x, y); children go below, shifted slightly in the same direction.
-// Returns total vertical space consumed (must match taskSubtreeHeight).
 function layoutTask(
   task: StudyTask,
   x: number,
@@ -49,7 +46,6 @@ function layoutTask(
   return childY - y + BRANCH_EXTRA_GAP;
 }
 
-// Tasks are vertically centered around topicY so branches feel balanced
 function layoutTopicTasks(
   topicNode: StudyNode,
   topicX: number,
@@ -125,7 +121,6 @@ export function autoLayout(nodes: StudyNode[], edges: Edge[]): StudyNode[] {
 
     const topicX = chainX + (hasLeftTasks ? TASK_H_OFFSET : 0);
 
-    // First topic starts at its own half-height so tasks don't go into negative Y
     const firstTn = topicNodes.find((n) => n.id === chain[0])!;
     let topicY = topicHalfHeight(firstTn);
 
@@ -136,7 +131,6 @@ export function autoLayout(nodes: StudyNode[], edges: Edge[]): StudyNode[] {
 
       if (i < chain.length - 1) {
         const nextTn = topicNodes.find((n) => n.id === chain[i + 1])!;
-        // Gap = bottom half of current + margin + top half of next
         topicY += topicHalfHeight(tn) + TOPIC_V_MARGIN + topicHalfHeight(nextTn);
       }
     }
